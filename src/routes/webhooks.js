@@ -291,6 +291,39 @@ router.get('/debug/providers', async (req, res) => {
   }
 });
 
+// Database inspection endpoint
+router.get('/debug/schema', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    
+    // Get table schema
+    const schemaQuery = `
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'providers' 
+      ORDER BY ordinal_position;
+    `;
+    
+    const schemaResult = await pool.query(schemaQuery);
+    
+    // Get sample data
+    const dataQuery = 'SELECT * FROM providers LIMIT 3';
+    const dataResult = await pool.query(dataQuery);
+    
+    res.json({
+      success: true,
+      table_schema: schemaResult.rows,
+      sample_data: dataResult.rows
+    });
+  } catch (error) {
+    console.error('Schema inspection failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Database setup endpoint
 router.post('/setup/database', async (req, res) => {
   try {
