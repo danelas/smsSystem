@@ -145,6 +145,8 @@ Contact the client directly. Good luck! 🍀`;
         console.log('Unknown provider phone number:', phoneNumber);
         return { action: 'unknown_provider' };
       }
+      
+      console.log('Found provider:', JSON.stringify(provider, null, 2));
 
       // Check rate limiting
       const rateLimitInfo = await Provider.getRateLimitInfo(provider.provider_id);
