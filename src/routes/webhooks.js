@@ -6,6 +6,21 @@ const LeadProcessor = require('../services/LeadProcessor');
 // FluentForms webhook endpoint
 router.post('/fluentforms', express.json(), WebhookController.handleFluentFormsWebhook);
 
+// GET handler for debugging (when someone visits the URL in browser)
+router.get('/fluentforms', (req, res) => {
+  console.log('=== GET REQUEST TO FLUENTFORMS WEBHOOK ===');
+  console.log('This should be a POST request from FluentForms');
+  console.log('Query params:', req.query);
+  console.log('=== END GET REQUEST ===');
+  
+  res.json({
+    error: 'This endpoint expects POST requests from FluentForms',
+    message: 'Configure FluentForms to send POST requests to this URL',
+    correctUrl: 'https://smssystem.onrender.com/webhooks/fluentforms',
+    method: 'POST'
+  });
+});
+
 // Stripe webhook endpoint (needs raw body)
 router.post('/stripe', express.raw({ type: 'application/json' }), WebhookController.handleStripeWebhook);
 
@@ -95,6 +110,27 @@ router.get('/debug/providers', async (req, res) => {
   } catch (error) {
     console.error('Error fetching providers:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Database setup endpoint
+router.post('/setup/database', async (req, res) => {
+  try {
+    console.log('🔄 Starting database setup...');
+    const setupDatabase = require('../../scripts/setup-database-render');
+    await setupDatabase();
+    
+    res.json({
+      success: true,
+      message: 'Database setup completed successfully'
+    });
+  } catch (error) {
+    console.error('❌ Database setup failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Database setup failed',
+      details: error.message
+    });
   }
 });
 
