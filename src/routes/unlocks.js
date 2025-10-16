@@ -145,7 +145,7 @@ router.get('/pay/:leadPrefix', async (req, res) => {
     const query = `
       SELECT payment_link_url, lead_id 
       FROM unlocks 
-      WHERE lead_id LIKE $1 
+      WHERE lead_id::text LIKE $1 
       AND payment_link_url IS NOT NULL 
       ORDER BY created_at DESC 
       LIMIT 1
