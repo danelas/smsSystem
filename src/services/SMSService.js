@@ -189,7 +189,7 @@ Contact the client directly. Good luck! 🍀`;
       }
 
       // Handle responses based on current status and normalized message
-      if (unlock.status === 'TEASER_SENT' || unlock.status === 'AWAIT_CONFIRM' || unlock.status === 'NEW_LEAD') {
+      if (unlock.status === 'TEASER_SENT' || unlock.status === 'AWAIT_CONFIRM' || unlock.status === 'NEW_LEAD' || unlock.status === 'PAYMENT_LINK_SENT') {
         if (message === 'Y' || message === 'YES') {
           // Record Y received timestamp
           const now = new Date().toISOString();
@@ -206,6 +206,9 @@ Contact the client directly. Good luck! 🍀`;
 
           // Create or reuse payment link
           console.log('Creating payment link for lead:', leadId, 'provider:', providerId);
+          console.log('Current unlock status:', unlock.status);
+          console.log('Existing payment link URL:', unlock.payment_link_url);
+          
           const paymentUrl = await StripeService.createPaymentLink(leadId, providerId, provider.email);
           console.log('Payment URL generated:', paymentUrl);
           
