@@ -340,7 +340,7 @@ router.post('/setup/database', async (req, res) => {
         ('provider1', 'Lisa', '+17542806739'),
         ('provider2', 'Nara', '+13053169435'),
         ('provider3', 'Maylin', '+13053180715')
-      ON CONFLICT (phone) DO NOTHING
+      ON CONFLICT (id) DO NOTHING
       RETURNING id, name;
     `;
     
@@ -381,7 +381,7 @@ router.get('/setup/database', async (req, res) => {
         ('provider1', 'Lisa', '+17542806739'),
         ('provider2', 'Nara', '+13053169435'),
         ('provider3', 'Maylin', '+13053180715')
-      ON CONFLICT (phone) DO NOTHING
+      ON CONFLICT (id) DO NOTHING
       RETURNING id, name;
     `;
     
