@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: gold-touch-leads
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: providers-db
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_API_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: TEXTMAGIC_API_KEY
+        sync: false
+      - key: TEXTMAGIC_FROM_NUMBER
+        sync: false
+      - key: TEXTMAGIC_USERNAME
+        sync: false
+      - key: SMS_BRIDGE_URL
+        sync: false
+      - key: WEBHOOK_SECRET
+        generateValue: true
+      - key: DOMAIN
+        value: https://gold-touch-leads.onrender.com
+
+databases:
+  - name: providers-db
+    databaseName: providers_1foz
+    user: providers_1foz_user
