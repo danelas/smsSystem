@@ -182,7 +182,7 @@ Contact the client directly. Good luck! 🍀`;
       }
 
       // Handle responses based on current status and normalized message
-      if (unlock.status === 'TEASER_SENT' || unlock.status === 'AWAIT_CONFIRM') {
+      if (unlock.status === 'TEASER_SENT' || unlock.status === 'AWAIT_CONFIRM' || unlock.status === 'NEW_LEAD') {
         if (message === 'Y' || message === 'YES') {
           // Record Y received timestamp
           const now = new Date().toISOString();
