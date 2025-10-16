@@ -23,8 +23,8 @@ class WebhookController {
     try {
       console.log('Received FluentForms webhook:', JSON.stringify(req.body, null, 2));
 
-      // Validate webhook secret if configured
-      if (process.env.WEBHOOK_SECRET) {
+      // Validate webhook secret if configured (skip in development)
+      if (process.env.WEBHOOK_SECRET && process.env.NODE_ENV !== 'development') {
         const receivedSecret = req.headers['x-webhook-secret'] || req.body.webhook_secret;
         if (receivedSecret !== process.env.WEBHOOK_SECRET) {
           console.error('Invalid webhook secret');

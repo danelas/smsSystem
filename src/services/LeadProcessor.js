@@ -36,9 +36,12 @@ class LeadProcessor {
           return;
         }
         
+        // Use the provider's actual ID format for the unlock record
+        const actualProviderId = specificProvider.id || `provider${specificProviderId}`;
+        
         matchingResult = {
           matches: [{
-            provider_id: specificProviderId,
+            provider_id: actualProviderId,
             match_score: 1.0,
             reasoning: 'Testing mode - specific provider selected'
           }],
@@ -110,7 +113,9 @@ class LeadProcessor {
       }
 
       // Create unlock record
+      console.log(`Creating unlock record for lead ${leadId} and provider ${providerId}`);
       const unlock = await Unlock.create(leadId, providerId);
+      console.log('Unlock record created:', unlock);
 
       // Check quiet hours
       if (SMSService.isQuietHours(provider.phone)) {

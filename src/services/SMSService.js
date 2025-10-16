@@ -186,7 +186,16 @@ Contact the client directly. Good luck! 🍀`;
           }
 
           // Create or reuse payment link
+          console.log('Creating payment link for lead:', leadId, 'provider:', provider.provider_id);
           const paymentUrl = await StripeService.createPaymentLink(leadId, provider.provider_id, provider.email);
+          console.log('Payment URL generated:', paymentUrl);
+          
+          if (!paymentUrl) {
+            console.error('Failed to generate payment URL');
+            await this.sendSMS(phoneNumber, "Sorry, there was an issue generating the payment link. Please try again later.");
+            return { action: 'payment_error' };
+          }
+          
           await this.sendPaymentLink(phoneNumber, paymentUrl, leadId);
           
           await Unlock.updateStatus(leadId, provider.provider_id, 'PAYMENT_LINK_SENT', {
