@@ -40,6 +40,10 @@ const webhookLimiter = rateLimit({
 });
 app.use('/webhooks/', webhookLimiter);
 
+// Serve static files
+app.use(express.static('public'));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 // Body parsing middleware
 // Note: Stripe webhook needs raw body, so we exclude it from JSON parsing
 app.use((req, res, next) => {
@@ -64,12 +68,29 @@ app.use('/unlocks', unlockRoutes);
 app.use('/providers', providerRoutes);
 app.use('/form', providerRoutes); // Also handle /form/:slug routes
 
+// Provider URLs page
+app.get('/provider-urls', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'provider-urls.html'));
+});
+
+// Form page for providers
+app.get('/form/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'form.html'));
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
     name: 'Gold Touch Lead Unlock System',
     version: '1.0.0',
     status: 'running',
+    endpoints: {
+      webhooks: '/webhooks',
+      api: '/api',
+      unlocks: '/unlocks',
+      providers: '/providers',
+      'provider-urls': '/provider-urls'
+    },
     timestamp: new Date().toISOString()
   });
 });

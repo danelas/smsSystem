@@ -26,7 +26,10 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const provider = await Provider.findBySlug(slug);
+    
+    // Since slug column doesn't exist yet, try to find by generated slug
+    const providers = await Provider.getAllWithUrls();
+    const provider = providers.find(p => p.slug === slug);
     
     if (!provider) {
       return res.status(404).json({ 

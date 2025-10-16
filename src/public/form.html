@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Service - Gold Touch Leads</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .provider-info {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .provider-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+        .form-container {
+            margin-top: 20px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Request Home Service</h1>
+            <p>Fill out the form below to get connected with a verified service provider</p>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading form...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="provider-info" class="provider-info" style="display: none;">
+            <div class="provider-name" id="provider-name"></div>
+            <p>You're requesting service from this provider</p>
+        </div>
+
+        <div id="form-container" class="form-container">
+            <!-- Fluent Forms will be embedded here -->
+        </div>
+    </div>
+
+    <script>
+        // Get provider slug from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const providerSlug = urlParams.get('provider') || window.location.pathname.split('/').pop();
+
+        async function loadProviderAndForm() {
+            try {
+                // Load provider info
+                const response = await fetch(`/providers/${providerSlug}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    showProviderInfo(data.provider);
+                    loadFluentForm(data.provider.id);
+                } else {
+                    showError('Provider not found. Please check the link and try again.');
+                }
+            } catch (error) {
+                console.error('Error loading provider:', error);
+                showError('Error loading form. Please try again later.');
+            }
+        }
+
+        function showProviderInfo(provider) {
+            document.getElementById('provider-name').textContent = provider.name;
+            document.getElementById('provider-info').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function loadFluentForm(providerId) {
+            // Create the Fluent Forms shortcode with pre-populated provider_id
+            const formContainer = document.getElementById('form-container');
+            
+            // Since we can't directly embed WordPress shortcodes in static HTML,
+            // we'll create a form that posts to your webhook with the provider_id
+            formContainer.innerHTML = `
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                    <strong>📋 Form Integration:</strong><br>
+                    To complete the integration, you need to:<br>
+                    1. Add this page to your WordPress site<br>
+                    2. Replace this section with: <code>[fluentform id="159" provider_id="${providerId}"]</code><br>
+                    3. Or modify your Fluent Form to include a hidden field with value: <code>${providerId}</code>
+                </div>
+                
+                <div style="border: 2px dashed #dee2e6; padding: 30px; text-align: center; border-radius: 8px;">
+                    <h3>🔧 Fluent Form Goes Here</h3>
+                    <p>Replace this with your Fluent Forms shortcode:</p>
+                    <code style="background: #f8f9fa; padding: 10px; border-radius: 4px; display: inline-block;">
+                        [fluentform id="159"]
+                    </code>
+                    <br><br>
+                    <p><strong>Provider ID to pass:</strong> <span style="background: #e9ecef; padding: 5px 10px; border-radius: 4px; font-family: monospace;">${providerId}</span></p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Load the form when page loads
+        loadProviderAndForm();
+    </script>
+</body>
+</html>

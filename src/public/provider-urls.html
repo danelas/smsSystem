@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider URLs - Copy & Paste</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .provider-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .provider-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .url-section {
+            margin-bottom: 15px;
+        }
+        .url-label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        .url-box {
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .url-box:hover {
+            background-color: #e9ecef;
+        }
+        .copy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+        .recommended {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .recommended .url-label {
+            color: #155724;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Provider URLs for Homepage Buttons</h1>
+        
+        <div class="note">
+            <strong>📋 Instructions:</strong><br>
+            • Use the <strong>Form URLs</strong> for your homepage buttons<br>
+            • These URLs will take customers directly to forms pre-populated with the specific provider<br>
+            • Click any URL to copy it to your clipboard
+        </div>
+
+        <div id="loading" class="loading">
+            Loading provider URLs...
+        </div>
+
+        <div id="providers-container"></div>
+    </div>
+
+    <script>
+        async function loadProviders() {
+            try {
+                const response = await fetch('/providers');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayProviders(data.providers);
+                } else {
+                    document.getElementById('loading').innerHTML = '❌ Error: ' + data.error;
+                }
+            } catch (error) {
+                document.getElementById('loading').innerHTML = '❌ Error loading providers: ' + error.message;
+            }
+        }
+
+        function displayProviders(providers) {
+            const container = document.getElementById('providers-container');
+            const loading = document.getElementById('loading');
+            
+            loading.style.display = 'none';
+            
+            providers.forEach(provider => {
+                const card = document.createElement('div');
+                card.className = 'provider-card';
+                
+                card.innerHTML = `
+                    <div class="provider-name">${provider.name} (${provider.id})</div>
+                    
+                    <div class="url-section recommended">
+                        <div class="url-label">🎯 Form URL (Use this for homepage buttons):</div>
+                        <div class="url-box" onclick="copyToClipboard('${provider.form_url}', this)">
+                            ${provider.form_url}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${provider.form_url}', this.parentElement)">Copy</button>
+                        </div>
+                    </div>
+                    
+                    <div class="url-section">
+                        <div class="url-label">👤 Profile URL (Optional):</div>
+                        <div class="url-box" onclick="copyToClipboard('${provider.profile_url}', this)">
+                            ${provider.profile_url}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${provider.profile_url}', this.parentElement)">Copy</button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalBg = element.style.backgroundColor;
+                element.style.backgroundColor = '#d4edda';
+                element.style.borderColor = '#c3e6cb';
+                
+                setTimeout(() => {
+                    element.style.backgroundColor = originalBg;
+                    element.style.borderColor = '';
+                }, 1000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // Load providers when page loads
+        loadProviders();
+    </script>
+</body>
+</html>
