@@ -136,18 +136,25 @@ class WebhookController {
       // Check if this exact session has already been processed
       const pool = require('../config/database');
       const existingProcessed = await pool.query(
-        'SELECT * FROM unlocks WHERE checkout_session_id = $1 AND status IN ($2, $3)',
-        [session.id, 'PAID', 'REVEALED']
+        'SELECT * FROM unlocks WHERE checkout_session_id = $1',
+        [session.id]
       );
       
+      console.log(`Checking for existing session ${session.id}:`, existingProcessed.rows);
+      
       if (existingProcessed.rows.length > 0) {
-        console.log(`Session ${session.id} already processed, ignoring duplicate webhook`);
-        await pool.query(`
-          INSERT INTO unlock_audit_log (
-            lead_id, provider_id, event_type, checkout_session_id, notes, created_at
-          ) VALUES ($1, $2, 'DUPLICATE_SESSION_WEBHOOK', $3, 'Same session already processed', CURRENT_TIMESTAMP)
-        `, [leadId, providerId, session.id]);
-        return;
+        const existing = existingProcessed.rows[0];
+        if (existing.status === 'PAID' || existing.status === 'REVEALED') {
+          console.log(`Session ${session.id} already processed with status ${existing.status}, ignoring duplicate webhook`);
+          await pool.query(`
+            INSERT INTO unlock_audit_log (
+              lead_id, provider_id, event_type, checkout_session_id, notes, created_at
+            ) VALUES ($1, $2, 'DUPLICATE_SESSION_WEBHOOK', $3, $4, CURRENT_TIMESTAMP)
+          `, [leadId, providerId, session.id, `Session already processed with status ${existing.status}`]);
+          return;
+        } else {
+          console.log(`Session ${session.id} exists but status is ${existing.status}, continuing processing`);
+        }
       }
 
       // Check if unlock exists first

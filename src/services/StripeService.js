@@ -111,7 +111,7 @@ class StripeService {
         after_completion: {
           type: 'redirect',
           redirect: {
-            url: `${process.env.DOMAIN}/unlocks/success?lead_id=${leadId}&provider_id=${providerId}`,
+            url: `https://smssystem.onrender.com/unlocks/success?lead_id=${leadId}&provider_id=${providerId}`,
           },
         },
       }, {

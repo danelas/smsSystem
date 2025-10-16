@@ -6,14 +6,14 @@ class Provider {
     let query, params;
     
     if (typeof providerId === 'string' && providerId.startsWith('provider')) {
-      // Use the string ID directly (like "provider10")
-      query = 'SELECT *, $1 as provider_id FROM providers WHERE id = $1';
-      params = [providerId];
+      // Extract numeric ID from "provider10" format
+      const numericId = parseInt(providerId.replace('provider', ''));
+      query = 'SELECT * FROM providers WHERE provider_id = $1';
+      params = [numericId];
     } else {
-      // Convert numeric ID to string format (10 -> "provider10")
-      const stringId = `provider${providerId}`;
-      query = 'SELECT *, $1 as provider_id FROM providers WHERE id = $1';
-      params = [stringId];
+      // Use numeric ID directly
+      query = 'SELECT * FROM providers WHERE provider_id = $1';
+      params = [parseInt(providerId)];
     }
     
     try {
