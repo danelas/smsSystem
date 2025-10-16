@@ -141,6 +141,77 @@ class Provider {
     const provider = await this.findByPhone(phoneNumber);
     return provider?.sms_opted_out || false;
   }
+
+  static async findBySlug(slug) {
+    const query = 'SELECT * FROM providers WHERE slug = $1';
+    
+    try {
+      const result = await pool.query(query, [slug]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error finding provider by slug:', error);
+      throw error;
+    }
+  }
+
+  static async getAllWithUrls(baseUrl = '') {
+    const query = `
+      SELECT 
+        provider_id,
+        name,
+        email,
+        phone,
+        slug,
+        service_areas,
+        is_verified,
+        sms_opted_out
+      FROM providers 
+      WHERE is_verified = true 
+      AND sms_opted_out = false
+      ORDER BY name
+    `;
+    
+    try {
+      const result = await pool.query(query);
+      return result.rows.map(provider => ({
+        ...provider,
+        form_url: `${baseUrl}/form/${provider.slug}`,
+        profile_url: `${baseUrl}/provider/${provider.slug}`
+      }));
+    } catch (error) {
+      console.error('Error getting all providers with URLs:', error);
+      throw error;
+    }
+  }
+
+  static generateSlug(name, providerId) {
+    // Create URL-friendly slug from name
+    const baseSlug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim();
+    
+    return `${baseSlug}-${providerId}`;
+  }
+
+  static async updateSlug(providerId, slug) {
+    const query = `
+      UPDATE providers 
+      SET slug = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE provider_id = $2
+      RETURNING *
+    `;
+
+    try {
+      const result = await pool.query(query, [slug, providerId]);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating provider slug:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = Provider;

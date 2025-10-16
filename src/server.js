@@ -9,6 +9,7 @@ const rateLimit = require('express-rate-limit');
 const webhookRoutes = require('./routes/webhooks');
 const apiRoutes = require('./routes/api');
 const unlockRoutes = require('./routes/unlocks');
+const providerRoutes = require('./routes/providers');
 
 // Import services for initialization
 const pool = require('./config/database');
@@ -60,6 +61,8 @@ app.use((req, res, next) => {
 app.use('/webhooks', webhookRoutes);
 app.use('/api', apiRoutes);
 app.use('/unlocks', unlockRoutes);
+app.use('/providers', providerRoutes);
+app.use('/form', providerRoutes); // Also handle /form/:slug routes
 
 // Root endpoint
 app.get('/', (req, res) => {

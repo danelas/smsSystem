@@ -131,7 +131,24 @@ class WebhookController {
       const now = new Date().toISOString();
 
       console.log(`🎉 PAYMENT COMPLETED! Processing checkout completion for lead ${leadId}, provider ${providerId}`);
-      console.log('Session details:', JSON.stringify(session, null, 2));
+      console.log('Session ID:', session.id);
+      
+      // Check if this exact session has already been processed
+      const pool = require('../config/database');
+      const existingProcessed = await pool.query(
+        'SELECT * FROM unlocks WHERE checkout_session_id = $1 AND status IN ($2, $3)',
+        [session.id, 'PAID', 'REVEALED']
+      );
+      
+      if (existingProcessed.rows.length > 0) {
+        console.log(`Session ${session.id} already processed, ignoring duplicate webhook`);
+        await pool.query(`
+          INSERT INTO unlock_audit_log (
+            lead_id, provider_id, event_type, checkout_session_id, notes, created_at
+          ) VALUES ($1, $2, 'DUPLICATE_SESSION_WEBHOOK', $3, 'Same session already processed', CURRENT_TIMESTAMP)
+        `, [leadId, providerId, session.id]);
+        return;
+      }
 
       // Check if unlock exists first
       const unlockRecord = await Unlock.findByLeadAndProvider(leadId, providerId);
@@ -152,19 +169,15 @@ class WebhookController {
       // Handle duplicate payment detection
       const duplicateCheck = await Unlock.handleDuplicatePayment(leadId, providerId, session.id);
       if (duplicateCheck.action === 'duplicate_payment') {
-        console.log('Duplicate payment detected, sending already unlocked message');
+        console.log('Duplicate payment detected, skipping - already processed');
         const provider = await Provider.findById(providerId);
         if (provider) {
           await SMSService.sendSMS(provider.phone, 
-            `This lead was already unlocked. Your contact details were sent previously. Lead ID: ${leadId}`
+            `Duplicate payment detected. Lead ${leadId.substring(0, 8)} was already unlocked. No additional charges applied.`
           );
           
-          // Resend the details
-          const leadDetails = await Lead.getPrivateFields(leadId);
-          const publicDetails = await Lead.getPublicFields(leadId);
-          if (leadDetails) {
-            await SMSService.sendRevealDetails(provider.phone, leadDetails, publicDetails, leadId);
-          }
+          // DO NOT resend customer details - they already have them
+          console.log('Duplicate payment notification sent, customer details NOT resent');
         }
         return;
       }
@@ -178,7 +191,16 @@ class WebhookController {
 
       // Check if already processed (idempotency)
       if (unlock.status === 'PAID' || unlock.status === 'REVEALED') {
-        console.log('Payment already processed, skipping');
+        console.log(`Payment already processed (status: ${unlock.status}), skipping duplicate webhook`);
+        
+        // Log duplicate webhook attempt for debugging
+        const pool = require('../config/database');
+        await pool.query(`
+          INSERT INTO unlock_audit_log (
+            lead_id, provider_id, event_type, checkout_session_id, notes, created_at
+          ) VALUES ($1, $2, 'DUPLICATE_WEBHOOK', $3, $4, CURRENT_TIMESTAMP)
+        `, [leadId, providerId, session.id, `Status already ${unlock.status}, webhook ignored`]);
+        
         return;
       }
 
