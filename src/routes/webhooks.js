@@ -1,11 +1,7 @@
 const express = require('express');
-const multer = require('multer');
 const router = express.Router();
 const WebhookController = require('../controllers/webhookController');
 const LeadProcessor = require('../services/LeadProcessor');
-
-// Configure multer for TextMagic multipart/form-data
-const upload = multer();
 
 // FluentForms webhook endpoint
 router.post('/fluentforms', express.json(), WebhookController.handleFluentFormsWebhook);
