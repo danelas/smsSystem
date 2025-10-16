@@ -97,6 +97,34 @@ router.post('/process-lead/:leadId', async (req, res) => {
   }
 });
 
+// List current unlocks for debugging
+router.get('/test/list-unlocks', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const query = `
+      SELECT lead_id, provider_id, status, created_at, payment_link_url 
+      FROM unlocks 
+      ORDER BY created_at DESC 
+      LIMIT 10
+    `;
+    
+    const result = await pool.query(query);
+    
+    res.json({ 
+      success: true, 
+      unlocks: result.rows,
+      count: result.rows.length
+    });
+
+  } catch (error) {
+    console.error('Error listing unlocks:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // Manual unlock creation for testing
 router.post('/test/create-unlock', express.json(), async (req, res) => {
   try {

@@ -133,6 +133,22 @@ class WebhookController {
       console.log(`🎉 PAYMENT COMPLETED! Processing checkout completion for lead ${leadId}, provider ${providerId}`);
       console.log('Session details:', JSON.stringify(session, null, 2));
 
+      // Check if unlock exists first
+      const unlockRecord = await Unlock.findByLeadAndProvider(leadId, providerId);
+      console.log('Found unlock record:', unlockRecord);
+      
+      if (!unlockRecord) {
+        console.error(`❌ Unlock not found for lead ${leadId}, provider ${providerId}`);
+        console.log('Searching for any unlocks with similar lead ID...');
+        
+        // Try to find any unlock with similar lead ID
+        const pool = require('../config/database');
+        const searchQuery = `SELECT * FROM unlocks WHERE lead_id::text LIKE $1 LIMIT 5`;
+        const searchResult = await pool.query(searchQuery, [`${leadId.substring(0, 8)}%`]);
+        console.log('Similar unlocks found:', searchResult.rows);
+        return;
+      }
+
       // Handle duplicate payment detection
       const duplicateCheck = await Unlock.handleDuplicatePayment(leadId, providerId, session.id);
       if (duplicateCheck.action === 'duplicate_payment') {

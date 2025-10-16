@@ -40,8 +40,14 @@ const webhookLimiter = rateLimit({
 app.use('/webhooks/', webhookLimiter);
 
 // Body parsing middleware
-// Note: Stripe webhook needs raw body, so we handle it specially in the route
-app.use(express.json({ limit: '10mb' }));
+// Note: Stripe webhook needs raw body, so we exclude it from JSON parsing
+app.use((req, res, next) => {
+  if (req.path === '/webhooks/stripe') {
+    next(); // Skip JSON parsing for Stripe webhook
+  } else {
+    express.json({ limit: '10mb' })(req, res, next);
+  }
+});
 app.use(express.urlencoded({ extended: true }));
 
 // Request logging
