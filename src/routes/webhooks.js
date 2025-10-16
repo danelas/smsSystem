@@ -97,6 +97,44 @@ router.post('/process-lead/:leadId', async (req, res) => {
   }
 });
 
+// Manual unlock creation for testing
+router.post('/test/create-unlock', express.json(), async (req, res) => {
+  try {
+    const { leadId, providerId } = req.body;
+    
+    if (!leadId || !providerId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields', 
+        required: ['leadId', 'providerId'],
+        example: {
+          leadId: '4cee9e25-082e-4d42-a7d3-c32a401cad01',
+          providerId: 'provider10'
+        }
+      });
+    }
+
+    console.log(`Creating test unlock for lead ${leadId} and provider ${providerId}`);
+    
+    const Unlock = require('../models/Unlock');
+    const unlock = await Unlock.create(leadId, providerId);
+    
+    console.log('Test unlock created:', unlock);
+    
+    res.json({ 
+      success: true, 
+      unlock: unlock,
+      message: 'Test unlock created successfully. Now you can reply Y to SMS.'
+    });
+
+  } catch (error) {
+    console.error('Error creating test unlock:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // Manual provider response endpoint (for testing when TextMagic webhook isn't set up)
 router.post('/test/provider-response', express.json(), async (req, res) => {
   try {
