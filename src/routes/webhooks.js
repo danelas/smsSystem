@@ -274,7 +274,7 @@ router.post('/test-webhook', (req, res) => {
 router.get('/debug/providers', async (req, res) => {
   try {
     const pool = require('../config/database');
-    const result = await pool.query('SELECT * FROM providers ORDER BY provider_id');
+    const result = await pool.query('SELECT * FROM providers ORDER BY id');
     
     console.log('=== PROVIDERS IN DATABASE ===');
     console.log(JSON.stringify(result.rows, null, 2));
@@ -340,22 +340,22 @@ router.post('/setup/database', async (req, res) => {
     await pool.query(schema);
     console.log('✅ Schema created');
     
-    // Add providers if they don't exist
+    // Add providers if they don't exist (using actual database columns)
     const providerInsert = `
-      INSERT INTO providers (name, phone, email, service_areas, is_verified, sms_opted_out)
+      INSERT INTO providers (id, name, phone)
       VALUES 
-        ('Lisa', '+17542806739', 'lisa@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
-        ('Nara', '+13053169435', 'nara@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
-        ('Maylin', '+13053180715', 'maylin@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false)
+        ('provider1', 'Lisa', '+17542806739'),
+        ('provider2', 'Nara', '+13053169435'),
+        ('provider3', 'Maylin', '+13053180715')
       ON CONFLICT (phone) DO NOTHING
-      RETURNING provider_id, name;
+      RETURNING id, name;
     `;
     
     const providerResult = await pool.query(providerInsert);
     console.log('✅ Providers added:', providerResult.rows);
     
     // Get all providers
-    const allProviders = await pool.query('SELECT provider_id, name, phone FROM providers ORDER BY provider_id');
+    const allProviders = await pool.query('SELECT id, name, phone FROM providers ORDER BY id');
     
     res.json({
       success: true,
@@ -388,22 +388,22 @@ router.get('/setup/database', async (req, res) => {
     await pool.query(schema);
     console.log('✅ Schema created');
     
-    // Add providers if they don't exist
+    // Add providers if they don't exist (using actual database columns)
     const providerInsert = `
-      INSERT INTO providers (name, phone, email, service_areas, is_verified, sms_opted_out)
+      INSERT INTO providers (id, name, phone)
       VALUES 
-        ('Lisa', '+17542806739', 'lisa@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
-        ('Nara', '+13053169435', 'nara@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
-        ('Maylin', '+13053180715', 'maylin@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false)
+        ('provider1', 'Lisa', '+17542806739'),
+        ('provider2', 'Nara', '+13053169435'),
+        ('provider3', 'Maylin', '+13053180715')
       ON CONFLICT (phone) DO NOTHING
-      RETURNING provider_id, name;
+      RETURNING id, name;
     `;
     
     const providerResult = await pool.query(providerInsert);
     console.log('✅ Providers added:', providerResult.rows);
     
     // Get all providers
-    const allProviders = await pool.query('SELECT provider_id, name, phone FROM providers ORDER BY provider_id');
+    const allProviders = await pool.query('SELECT id, name, phone FROM providers ORDER BY id');
     
     res.json({
       success: true,
