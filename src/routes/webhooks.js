@@ -135,6 +135,50 @@ router.post('/test/create-unlock', express.json(), async (req, res) => {
   }
 });
 
+// Manual payment completion test
+router.post('/test/payment-complete', express.json(), async (req, res) => {
+  try {
+    const { leadId, providerId } = req.body;
+    
+    if (!leadId || !providerId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields', 
+        required: ['leadId', 'providerId'],
+        example: {
+          leadId: 'b811a43d-...',
+          providerId: 'provider10'
+        }
+      });
+    }
+
+    console.log(`🧪 Manual payment completion test for lead ${leadId}, provider ${providerId}`);
+    
+    // Simulate the payment completion
+    const WebhookController = require('../controllers/webhookController');
+    const mockSession = {
+      id: 'cs_test_manual_' + Date.now(),
+      metadata: {
+        lead_id: leadId,
+        provider_id: providerId
+      }
+    };
+    
+    await WebhookController.handleCheckoutCompleted(mockSession);
+    
+    res.json({ 
+      success: true, 
+      message: 'Payment completion simulated - check for SMS with contact details!'
+    });
+
+  } catch (error) {
+    console.error('Error simulating payment completion:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // Manual provider response endpoint (for testing when TextMagic webhook isn't set up)
 router.post('/test/provider-response', express.json(), async (req, res) => {
   try {
