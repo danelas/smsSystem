@@ -50,12 +50,13 @@ class SMSService {
   }
 
   async sendPaymentLink(providerPhone, paymentUrl, leadId) {
-    const message = `🔓 Ready to unlock this lead? Pay $20 to get full contact details: ${paymentUrl}
+    const message = `🔓 Pay $20 to unlock lead details: ${paymentUrl}
 
-Lead ID: ${leadId}
+Lead: ${leadId.substring(0, 8)}...
 
-This is an advertising access fee, not a service booking. Gold Touch provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
+Gold Touch - Lead access fee. We provide advertising access only.`;
     
+    console.log('Payment SMS length:', message.length);
     return await this.sendSMS(providerPhone, message);
   }
 
