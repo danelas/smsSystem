@@ -37,10 +37,10 @@ router.get('/:slug', async (req, res) => {
 
     // Don't expose sensitive info
     const publicProvider = {
-      provider_id: provider.provider_id,
+      id: provider.id,
       name: provider.name,
       slug: provider.slug,
-      service_areas: provider.service_areas
+      phone: provider.phone
     };
 
     res.json({
@@ -74,10 +74,10 @@ router.get('/:slug/form', async (req, res) => {
     res.json({
       success: true,
       provider: {
-        provider_id: provider.provider_id,
+        id: provider.id,
         name: provider.name,
         slug: provider.slug,
-        service_areas: provider.service_areas
+        phone: provider.phone
       },
       form_action: '/webhooks/fluentforms',
       message: `Fill out the form below to request service from ${provider.name}`
@@ -109,16 +109,16 @@ router.post('/setup/slugs', async (req, res) => {
     
     // Get all providers without slugs
     const providersResult = await pool.query(
-      'SELECT provider_id, name FROM providers WHERE slug IS NULL'
+      'SELECT id, name FROM providers WHERE slug IS NULL'
     );
     
     const updatedProviders = [];
     
     for (const provider of providersResult.rows) {
-      const slug = Provider.generateSlug(provider.name, provider.provider_id);
+      const slug = Provider.generateSlug(provider.name, provider.id);
       
       try {
-        const updated = await Provider.updateSlug(provider.provider_id, slug);
+        const updated = await Provider.updateSlug(provider.id, slug);
         updatedProviders.push(updated);
         console.log(`✅ Generated slug for ${provider.name}: ${slug}`);
       } catch (error) {

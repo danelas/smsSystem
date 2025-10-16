@@ -6,14 +6,14 @@ class Provider {
     let query, params;
     
     if (typeof providerId === 'string' && providerId.startsWith('provider')) {
-      // Extract numeric ID from "provider10" format
-      const numericId = parseInt(providerId.replace('provider', ''));
-      query = 'SELECT * FROM providers WHERE provider_id = $1';
-      params = [numericId];
+      // Use the string ID directly (like "provider10")
+      query = 'SELECT * FROM providers WHERE id = $1';
+      params = [providerId];
     } else {
-      // Use numeric ID directly
-      query = 'SELECT * FROM providers WHERE provider_id = $1';
-      params = [parseInt(providerId)];
+      // Convert numeric ID to string format (10 -> "provider10")
+      const stringId = `provider${providerId}`;
+      query = 'SELECT * FROM providers WHERE id = $1';
+      params = [stringId];
     }
     
     try {
@@ -65,7 +65,7 @@ class Provider {
       SELECT * FROM providers 
       WHERE sms_opted_out = false 
       AND is_verified = true
-      ORDER BY provider_id
+      ORDER BY id
     `;
     
     try {
@@ -157,17 +157,13 @@ class Provider {
   static async getAllWithUrls(baseUrl = '') {
     const query = `
       SELECT 
-        provider_id,
+        id,
         name,
-        email,
         phone,
         slug,
-        service_areas,
-        is_verified,
-        sms_opted_out
+        created_at,
+        updated_at
       FROM providers 
-      WHERE is_verified = true 
-      AND sms_opted_out = false
       ORDER BY name
     `;
     
@@ -193,14 +189,18 @@ class Provider {
       .replace(/-+/g, '-') // Replace multiple hyphens with single
       .trim();
     
-    return `${baseSlug}-${providerId}`;
+    // Extract numeric part from provider ID (provider1 -> 1)
+    const numericId = typeof providerId === 'string' ? 
+      providerId.replace('provider', '') : providerId;
+    
+    return `${baseSlug}-${numericId}`;
   }
 
   static async updateSlug(providerId, slug) {
     const query = `
       UPDATE providers 
       SET slug = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE provider_id = $2
+      WHERE id = $2
       RETURNING *
     `;
 
