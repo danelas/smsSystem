@@ -150,7 +150,6 @@ class Provider {
         id,
         name,
         phone,
-        slug,
         created_at,
         updated_at
       FROM providers 
@@ -159,11 +158,16 @@ class Provider {
     
     try {
       const result = await pool.query(query);
-      return result.rows.map(provider => ({
-        ...provider,
-        form_url: `${baseUrl}/form/${provider.slug}`,
-        profile_url: `${baseUrl}/provider/${provider.slug}`
-      }));
+      return result.rows.map(provider => {
+        // Generate a slug since column doesn't exist yet
+        const slug = Provider.generateSlug(provider.name, provider.id);
+        return {
+          ...provider,
+          slug: slug,
+          form_url: `${baseUrl}/form/${slug}`,
+          profile_url: `${baseUrl}/provider/${slug}`
+        };
+      });
     } catch (error) {
       console.error('Error getting all providers with URLs:', error);
       throw error;
