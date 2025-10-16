@@ -99,9 +99,8 @@ class Lead {
 
   static async findMatchingProviders(leadId) {
     const query = `
-      SELECT provider_id, name, phone, service_areas, email
+      SELECT id, name, phone
       FROM providers 
-      WHERE is_verified = true AND sms_opted_out = false
     `;
     
     try {

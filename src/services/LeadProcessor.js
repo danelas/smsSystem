@@ -92,11 +92,11 @@ class LeadProcessor {
         return;
       }
 
-      // Check if provider is opted out
-      if (provider.sms_opted_out) {
-        console.log(`Provider ${providerId} is opted out, skipping`);
-        return;
-      }
+      // Check if provider is opted out (not implemented in current schema)
+      // if (provider.sms_opted_out) {
+      //   console.log(`Provider ${providerId} is opted out, skipping`);
+      //   return;
+      // }
 
       // Check rate limiting
       const rateLimitInfo = await Provider.getRateLimitInfo(providerId);
