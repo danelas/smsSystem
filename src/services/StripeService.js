@@ -4,6 +4,11 @@ const Unlock = require('../models/Unlock');
 class StripeService {
   static async createPaymentLink(leadId, providerId, providerEmail = null) {
     try {
+      console.log('Stripe service: Creating payment link');
+      console.log('- Lead ID:', leadId);
+      console.log('- Provider ID:', providerId);
+      console.log('- Stripe key configured:', !!process.env.STRIPE_SECRET_KEY);
+      
       const idempotencyKey = await Unlock.getIdempotencyKey(leadId, providerId);
 
       // Check if there's already an active payment session
