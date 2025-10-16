@@ -32,7 +32,7 @@ services:
       - key: WEBHOOK_SECRET
         generateValue: true
       - key: DOMAIN
-        value: https://gold-touch-leads.onrender.com
+        value: https://smssystem.onrender.com
 
 databases:
   - name: providers-db

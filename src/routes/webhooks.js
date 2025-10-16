@@ -62,4 +62,19 @@ router.post('/cleanup/expired', async (req, res) => {
   }
 });
 
+// Test webhook endpoint to debug form submissions
+router.post('/test-webhook', (req, res) => {
+  console.log('=== TEST WEBHOOK RECEIVED ===');
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Body:', JSON.stringify(req.body, null, 2));
+  console.log('Query:', JSON.stringify(req.query, null, 2));
+  console.log('=== END TEST WEBHOOK ===');
+  
+  res.json({ 
+    success: true, 
+    message: 'Test webhook received',
+    receivedData: req.body 
+  });
+});
+
 module.exports = router;

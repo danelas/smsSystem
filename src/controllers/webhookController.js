@@ -11,7 +11,8 @@ const fluentFormsSchema = Joi.object({
   length: Joi.string().allow(''),
   type: Joi.string().required(),
   location: Joi.string().allow(''),
-  contactpref: Joi.string().allow('')
+  contactpref: Joi.string().allow(''),
+  provider_id: Joi.number().integer().optional() // For testing specific providers
 });
 
 class WebhookController {
@@ -56,17 +57,18 @@ class WebhookController {
 
       // Create the lead
       const lead = await Lead.create(value);
-      console.log('Created lead:', lead.lead_id);
+      console.log('Lead created:', lead.lead_id);
 
-      // Process the lead asynchronously (find matching providers and send notifications)
-      LeadProcessor.processNewLead(lead.lead_id).catch(error => {
+      // Process the lead asynchronously (with optional specific provider for testing)
+      LeadProcessor.processNewLead(lead.lead_id, value.provider_id).catch(error => {
         console.error('Error processing lead:', error);
       });
 
-      res.status(200).json({ 
+      res.json({ 
         success: true, 
         leadId: lead.lead_id,
-        message: 'Lead received and processing started' 
+        providerId: value.provider_id || 'auto-matched',
+        message: 'Lead received and processing started'
       });
 
     } catch (error) {

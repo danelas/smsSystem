@@ -6,14 +6,15 @@ const SMSService = require('./SMSService');
 const StripeService = require('./StripeService');
 
 class LeadProcessor {
-  static async processNewLead(leadId) {
+  static async processNewLead(leadId, specificProviderId = null) {
     try {
-      console.log(`Processing new lead: ${leadId}`);
+      console.log(`Processing new lead: ${leadId}${specificProviderId ? ` for specific provider: ${specificProviderId}` : ''}`);
 
       // Get lead data
       const lead = await Lead.findById(leadId);
       if (!lead) {
-        throw new Error(`Lead not found: ${leadId}`);
+        console.error('Lead not found:', leadId);
+        return;
       }
 
       // Validate lead quality with OpenAI
@@ -25,16 +26,37 @@ class LeadProcessor {
         return;
       }
 
-      // Find matching providers
-      const allProviders = await Provider.findMatchingProviders(lead);
-      if (allProviders.length === 0) {
-        console.log('No providers found for lead');
-        return;
-      }
+      let matchingResult;
+      
+      if (specificProviderId) {
+        // Testing mode: use specific provider
+        const specificProvider = await Provider.findById(specificProviderId);
+        if (!specificProvider) {
+          console.error('Specific provider not found:', specificProviderId);
+          return;
+        }
+        
+        matchingResult = {
+          matches: [{
+            provider_id: specificProviderId,
+            match_score: 1.0,
+            reasoning: 'Testing mode - specific provider selected'
+          }],
+          enhancement: 'Testing lead for specific provider'
+        };
+        console.log('Using specific provider for testing:', specificProviderId);
+      } else {
+        // Normal mode: find matching providers
+        const allProviders = await Provider.findMatchingProviders(lead);
+        if (allProviders.length === 0) {
+          console.log('No providers found for lead');
+          return;
+        }
 
-      // Use OpenAI to match providers
-      const matchingResult = await OpenAIService.processLeadForMatching(lead, allProviders);
-      console.log('Provider matching result:', matchingResult);
+        // Use OpenAI to match providers
+        matchingResult = await OpenAIService.processLeadForMatching(lead, allProviders);
+        console.log('Provider matching result:', matchingResult);
+      }
 
       // Get public lead data for teaser
       const publicLeadData = await Lead.getPublicFields(leadId);
