@@ -166,8 +166,6 @@ class WebhookController {
         return;
       }
 
-      const now = new Date().toISOString();
-
       // Handle payment after TTL
       if (unlock.ttl_expires_at && new Date(unlock.ttl_expires_at) < new Date()) {
         console.log('Payment received after TTL, but still revealing since provider paid');
