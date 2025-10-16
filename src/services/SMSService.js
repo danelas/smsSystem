@@ -157,16 +157,25 @@ Contact the client directly. Good luck! 🍀`;
 
       // If no leadId provided, try to find the most recent interaction
       if (!leadId) {
+        console.log(`No leadId provided, looking for most recent unlock for provider: ${provider.provider_id}`);
         const recentUnlock = await this.getMostRecentUnlock(provider.provider_id);
+        console.log('Most recent unlock found:', recentUnlock);
+        
         if (!recentUnlock) {
+          console.log('No recent unlock found - sending help message');
           await this.sendHelpMessage(phoneNumber);
           return { action: 'no_recent_interaction' };
         }
         leadId = recentUnlock.lead_id;
+        console.log('Using leadId from recent unlock:', leadId);
       }
 
+      console.log(`Looking for unlock with leadId: ${leadId}, providerId: ${provider.provider_id}`);
       const unlock = await Unlock.findByLeadAndProvider(leadId, provider.provider_id);
+      console.log('Found unlock:', unlock);
+      
       if (!unlock) {
+        console.log('No unlock found - sending help message');
         await this.sendHelpMessage(phoneNumber);
         return { action: 'unlock_not_found' };
       }
