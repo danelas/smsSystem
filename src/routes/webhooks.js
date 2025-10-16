@@ -24,29 +24,65 @@ router.get('/fluentforms', (req, res) => {
 // Stripe webhook endpoint (needs raw body)
 router.post('/stripe', express.raw({ type: 'application/json' }), WebhookController.handleStripeWebhook);
 
-// TextMagic incoming SMS webhook
-router.post('/sms/incoming', express.json(), async (req, res) => {
-  try {
-    console.log('Incoming SMS webhook:', req.body);
+// TextMagic incoming SMS webhook (GET for testing)
+router.get('/sms/incoming', (req, res) => {
+  console.log('GET request to SMS webhook - this is for testing');
+  console.log('Query params:', req.query);
+  res.json({
+    message: 'SMS webhook is working',
+    method: 'GET',
+    query: req.query,
+    instructions: 'TextMagic should send POST requests here'
+  });
+});
 
-    const { from, text, message_id } = req.body;
+// TextMagic incoming SMS webhook
+router.post('/sms/incoming', express.urlencoded({ extended: true }), async (req, res) => {
+  try {
+    console.log('=== INCOMING SMS WEBHOOK DEBUG ===');
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('Query:', JSON.stringify(req.query, null, 2));
+    console.log('Raw body type:', typeof req.body);
+    console.log('Raw body keys:', Object.keys(req.body || {}));
+    console.log('=== END DEBUG ===');
+
+    // Try different possible field names that TextMagic might use
+    const body = req.body || {};
+    const from = body.from || body.sender || body.phone || body.number;
+    const text = body.text || body.message || body.body || body.content;
+    const messageId = body.message_id || body.messageId || body.id;
+    
+    console.log('Extracted fields:');
+    console.log('- from:', from);
+    console.log('- text:', text);
+    console.log('- messageId:', messageId);
     
     if (!from || !text) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      console.log('Missing required fields - sending error response');
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        received: body,
+        expected: ['from/sender/phone', 'text/message/body']
+      });
     }
 
+    console.log(`Processing SMS: ${from} -> "${text}"`);
+    
     // Process the incoming message
     const result = await LeadProcessor.handleProviderResponse(from, text);
+    
+    console.log('Processing result:', result);
     
     res.json({ 
       success: true, 
       action: result.action,
-      message_id: message_id 
+      message_id: messageId 
     });
 
   } catch (error) {
     console.error('Error handling incoming SMS:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
