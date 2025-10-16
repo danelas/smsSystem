@@ -53,16 +53,48 @@ router.post('/sms/incoming', express.json(), async (req, res) => {
 // Manual lead processing endpoint (for testing)
 router.post('/process-lead/:leadId', async (req, res) => {
   try {
-    const { leadId } = req.params;
-    
-    // Process the lead
-    await LeadProcessor.processNewLead(leadId);
-    
+    await LeadProcessor.processNewLead(req.params.leadId);
     res.json({ success: true, message: 'Lead processing started' });
+  } catch (error) {
+    console.error('Error processing lead:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Manual provider response endpoint (for testing when TextMagic webhook isn't set up)
+router.post('/test/provider-response', express.json(), async (req, res) => {
+  try {
+    const { phone, message, leadId } = req.body;
+    
+    if (!phone || !message) {
+      return res.status(400).json({ 
+        error: 'Missing required fields', 
+        required: ['phone', 'message'],
+        example: {
+          phone: '+17542806739',
+          message: 'Y',
+          leadId: 'optional-lead-id'
+        }
+      });
+    }
+
+    console.log(`Manual provider response test: ${phone} -> ${message}`);
+    
+    // Process the response
+    const result = await LeadProcessor.handleProviderResponse(phone, message, leadId);
+    
+    res.json({ 
+      success: true, 
+      result: result,
+      message: 'Provider response processed successfully'
+    });
 
   } catch (error) {
-    console.error('Error processing lead manually:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error processing manual provider response:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 });
 
