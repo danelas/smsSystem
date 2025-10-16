@@ -12,7 +12,10 @@ const fluentFormsSchema = Joi.object({
   type: Joi.string().required(),
   location: Joi.string().allow(''),
   contactpref: Joi.string().allow(''),
-  provider_id: Joi.number().integer().optional() // For testing specific providers
+  provider_id: Joi.alternatives().try(
+    Joi.number().integer(),
+    Joi.string().pattern(/^provider(\d+)$/)
+  ).optional() // For testing specific providers - accepts number or "provider10" format
 });
 
 class WebhookController {
@@ -53,6 +56,15 @@ class WebhookController {
           error: 'Invalid form data', 
           details: error.details 
         });
+      }
+
+      // Convert provider_id from "provider10" format to numeric if needed
+      if (value.provider_id && typeof value.provider_id === 'string') {
+        const match = value.provider_id.match(/^provider(\d+)$/);
+        if (match) {
+          value.provider_id = parseInt(match[1]);
+          console.log('Converted provider_id from string to number:', value.provider_id);
+        }
       }
 
       // Create the lead
