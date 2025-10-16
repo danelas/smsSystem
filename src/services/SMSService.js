@@ -54,7 +54,7 @@ class SMSService {
 
 Lead ID: ${leadId}
 
-This is an advertising access fee, not a service booking. Gold Touch List provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
+This is an advertising access fee, not a service booking. Gold Touch provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
     
     return await this.sendSMS(providerPhone, message);
   }
@@ -65,7 +65,7 @@ This is an advertising access fee, not a service booking. Gold Touch List provid
   }
 
   async sendOptOutConfirmation(providerPhone) {
-    const message = "✅ You've been opted out from Gold Touch Lead notifications. Reply START to opt back in.";
+    const message = "✅ You've been opted out from Gold Touch notifications. Reply START to opt back in.";
     return await this.sendSMS(providerPhone, message);
   }
 
@@ -74,7 +74,7 @@ This is an advertising access fee, not a service booking. Gold Touch List provid
       moment(leadData.preferred_time_window).format('MMM D, YYYY h:mm A') : 
       'Flexible';
 
-    return `🎯 NEW LEAD AVAILABLE
+    return `📋 BOOKING REQUEST AVAILABLE
 Service: ${leadData.service_type}
 Location: ${leadData.city}
 When: ${timeWindow}
@@ -86,7 +86,7 @@ Reply Y to proceed, N to pass
 
 Lead ID: ${leadId}
 
-Gold Touch List provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
+Gold Touch provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
   }
 
   formatRevealMessage(privateDetails, publicDetails, leadId) {

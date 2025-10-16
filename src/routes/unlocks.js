@@ -61,7 +61,7 @@ router.get('/success', (req, res) => {
             </ul>
             
             <div class="footer">
-                <p>Gold Touch List provides advertising access to client inquiries.<br>
+                <p>Gold Touch provides advertising access to client inquiries.<br>
                 We do not arrange or guarantee appointments.</p>
             </div>
         </div>
@@ -125,7 +125,7 @@ router.get('/cancel', (req, res) => {
             <p>If you change your mind, you can still reply <strong>Y</strong> to the original SMS to get a new payment link.</p>
             
             <div class="footer">
-                <p>Gold Touch List - Lead opportunities delivered to your phone</p>
+                <p>Gold Touch - Lead opportunities delivered to your phone</p>
             </div>
         </div>
     </body>
