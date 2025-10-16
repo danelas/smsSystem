@@ -148,17 +148,18 @@ Contact the client directly. Good luck! 🍀`;
       
       console.log('Found provider:', JSON.stringify(provider, null, 2));
 
-      // Check rate limiting
-      const rateLimitInfo = await Provider.getRateLimitInfo(provider.provider_id);
+      // Check rate limiting  
+      const providerId = provider.id || provider.provider_id;
+      const rateLimitInfo = await Provider.getRateLimitInfo(providerId);
       if (rateLimitInfo.isRateLimited) {
-        console.log(`Provider ${provider.provider_id} is rate limited`);
+        console.log(`Provider ${providerId} is rate limited`);
         return { action: 'rate_limited' };
       }
 
       // If no leadId provided, try to find the most recent interaction
       if (!leadId) {
-        console.log(`No leadId provided, looking for most recent unlock for provider: ${provider.provider_id}`);
-        const recentUnlock = await this.getMostRecentUnlock(provider.provider_id);
+        console.log(`No leadId provided, looking for most recent unlock for provider: ${providerId}`);
+        const recentUnlock = await this.getMostRecentUnlock(providerId);
         console.log('Most recent unlock found:', recentUnlock);
         
         if (!recentUnlock) {
@@ -170,8 +171,8 @@ Contact the client directly. Good luck! 🍀`;
         console.log('Using leadId from recent unlock:', leadId);
       }
 
-      console.log(`Looking for unlock with leadId: ${leadId}, providerId: ${provider.provider_id}`);
-      const unlock = await Unlock.findByLeadAndProvider(leadId, provider.provider_id);
+      console.log(`Looking for unlock with leadId: ${leadId}, providerId: ${providerId}`);
+      const unlock = await Unlock.findByLeadAndProvider(leadId, providerId);
       console.log('Found unlock:', unlock);
       
       if (!unlock) {
@@ -185,7 +186,7 @@ Contact the client directly. Good luck! 🍀`;
         if (message === 'Y' || message === 'YES') {
           // Record Y received timestamp
           const now = new Date().toISOString();
-          await Unlock.updateStatus(leadId, provider.provider_id, 'AWAIT_CONFIRM', {
+          await Unlock.updateStatus(leadId, providerId, 'AWAIT_CONFIRM', {
             y_received_at: now
           });
 
@@ -197,8 +198,8 @@ Contact the client directly. Good luck! 🍀`;
           }
 
           // Create or reuse payment link
-          console.log('Creating payment link for lead:', leadId, 'provider:', provider.provider_id);
-          const paymentUrl = await StripeService.createPaymentLink(leadId, provider.provider_id, provider.email);
+          console.log('Creating payment link for lead:', leadId, 'provider:', providerId);
+          const paymentUrl = await StripeService.createPaymentLink(leadId, providerId, provider.email);
           console.log('Payment URL generated:', paymentUrl);
           
           if (!paymentUrl) {
@@ -209,7 +210,7 @@ Contact the client directly. Good luck! 🍀`;
           
           await this.sendPaymentLink(phoneNumber, paymentUrl, leadId);
           
-          await Unlock.updateStatus(leadId, provider.provider_id, 'PAYMENT_LINK_SENT', {
+          await Unlock.updateStatus(leadId, providerId, 'PAYMENT_LINK_SENT', {
             payment_link_sent_at: now,
             last_sent_at: now
           });
@@ -217,7 +218,7 @@ Contact the client directly. Good luck! 🍀`;
           return { action: 'payment_link_sent', paymentUrl };
           
         } else if (message === 'N' || message === 'NO') {
-          await Unlock.updateStatus(leadId, provider.provider_id, 'EXPIRED');
+          await Unlock.updateStatus(leadId, providerId, 'EXPIRED');
           await this.sendSMS(phoneNumber, "Thanks for letting us know. You'll receive future lead opportunities.");
           return { action: 'declined' };
         }
