@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Unlock = require('../models/Unlock');
 
 // Success page after payment
 router.get('/success', (req, res) => {
@@ -131,6 +132,51 @@ router.get('/cancel', (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Short URL redirect for payment links
+router.get('/pay/:leadPrefix', async (req, res) => {
+  try {
+    const { leadPrefix } = req.params;
+    console.log('Payment redirect requested for lead prefix:', leadPrefix);
+    
+    // Find the unlock record with a lead ID that starts with this prefix
+    const pool = require('../config/database');
+    const query = `
+      SELECT payment_link_url, lead_id 
+      FROM unlocks 
+      WHERE lead_id LIKE $1 
+      AND payment_link_url IS NOT NULL 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `;
+    
+    const result = await pool.query(query, [`${leadPrefix}%`]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Payment Link Not Found</title></head>
+        <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+          <h1>Payment Link Not Found</h1>
+          <p>The payment link you're looking for could not be found or has expired.</p>
+          <p>Please reply Y to the original SMS to get a new payment link.</p>
+        </body>
+        </html>
+      `);
+    }
+    
+    const paymentUrl = result.rows[0].payment_link_url;
+    console.log('Redirecting to Stripe URL:', paymentUrl);
+    
+    // Redirect to the actual Stripe payment URL
+    res.redirect(paymentUrl);
+    
+  } catch (error) {
+    console.error('Error in payment redirect:', error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 module.exports = router;

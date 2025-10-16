@@ -50,13 +50,19 @@ class SMSService {
   }
 
   async sendPaymentLink(providerPhone, paymentUrl, leadId) {
-    const message = `🔓 Pay $20 to unlock lead details: ${paymentUrl}
+    // Create a shorter redirect URL
+    const shortUrl = `https://smssystem.onrender.com/unlocks/pay/${leadId.substring(0, 8)}`;
+    
+    const message = `🔓 Pay $20 to unlock lead: ${shortUrl}
 
 Lead: ${leadId.substring(0, 8)}...
 
-Gold Touch - Lead access fee. We provide advertising access only.`;
+Gold Touch - Lead access fee only.`;
     
     console.log('Payment SMS length:', message.length);
+    console.log('Original Stripe URL length:', paymentUrl.length);
+    console.log('Short URL length:', shortUrl.length);
+    
     return await this.sendSMS(providerPhone, message);
   }
 
