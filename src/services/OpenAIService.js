@@ -177,7 +177,14 @@ Respond with JSON:
         max_tokens: 400
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content;
+      
+      // Clean up the response if it contains markdown code blocks
+      if (content.includes('```json')) {
+        content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      }
+      
+      return JSON.parse(content);
 
     } catch (error) {
       console.error('Error validating lead quality:', error);

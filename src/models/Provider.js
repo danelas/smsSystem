@@ -2,9 +2,22 @@ const pool = require('../config/database');
 
 class Provider {
   static async findById(providerId) {
-    const query = 'SELECT * FROM providers WHERE provider_id = $1';
+    // Handle both numeric IDs and string IDs like "provider10"
+    let query, params;
+    
+    if (typeof providerId === 'string' && providerId.startsWith('provider')) {
+      // Use the string ID directly (like "provider10")
+      query = 'SELECT *, $1 as provider_id FROM providers WHERE id = $1';
+      params = [providerId];
+    } else {
+      // Convert numeric ID to string format (10 -> "provider10")
+      const stringId = `provider${providerId}`;
+      query = 'SELECT *, $1 as provider_id FROM providers WHERE id = $1';
+      params = [stringId];
+    }
+    
     try {
-      const result = await pool.query(query, [providerId]);
+      const result = await pool.query(query, params);
       return result.rows[0];
     } catch (error) {
       console.error('Error finding provider:', error);

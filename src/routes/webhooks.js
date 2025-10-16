@@ -117,12 +117,91 @@ router.get('/debug/providers', async (req, res) => {
 router.post('/setup/database', async (req, res) => {
   try {
     console.log('🔄 Starting database setup...');
-    const setupDatabase = require('../../scripts/setup-database-render');
-    await setupDatabase();
+    const pool = require('../config/database');
+    
+    // Read the schema file
+    const fs = require('fs');
+    const path = require('path');
+    const schemaPath = path.join(__dirname, '../models/schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+    
+    // Execute the schema
+    await pool.query(schema);
+    console.log('✅ Schema created');
+    
+    // Add providers if they don't exist
+    const providerInsert = `
+      INSERT INTO providers (name, phone, email, service_areas, is_verified, sms_opted_out)
+      VALUES 
+        ('Lisa', '+17542806739', 'lisa@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
+        ('Nara', '+13053169435', 'nara@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
+        ('Maylin', '+13053180715', 'maylin@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false)
+      ON CONFLICT (phone) DO NOTHING
+      RETURNING provider_id, name;
+    `;
+    
+    const providerResult = await pool.query(providerInsert);
+    console.log('✅ Providers added:', providerResult.rows);
+    
+    // Get all providers
+    const allProviders = await pool.query('SELECT provider_id, name, phone FROM providers ORDER BY provider_id');
     
     res.json({
       success: true,
-      message: 'Database setup completed successfully'
+      message: 'Database setup completed successfully',
+      providers: allProviders.rows
+    });
+  } catch (error) {
+    console.error('❌ Database setup failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Database setup failed',
+      details: error.message
+    });
+  }
+});
+
+// GET version for easy browser access
+router.get('/setup/database', async (req, res) => {
+  try {
+    console.log('🔄 Starting database setup via GET...');
+    const pool = require('../config/database');
+    
+    // Read the schema file
+    const fs = require('fs');
+    const path = require('path');
+    const schemaPath = path.join(__dirname, '../models/schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+    
+    // Execute the schema
+    await pool.query(schema);
+    console.log('✅ Schema created');
+    
+    // Add providers if they don't exist
+    const providerInsert = `
+      INSERT INTO providers (name, phone, email, service_areas, is_verified, sms_opted_out)
+      VALUES 
+        ('Lisa', '+17542806739', 'lisa@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
+        ('Nara', '+13053169435', 'nara@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false),
+        ('Maylin', '+13053180715', 'maylin@goldtouchleads.com', ARRAY['Miami', 'Hollywood', 'Fort Lauderdale'], true, false)
+      ON CONFLICT (phone) DO NOTHING
+      RETURNING provider_id, name;
+    `;
+    
+    const providerResult = await pool.query(providerInsert);
+    console.log('✅ Providers added:', providerResult.rows);
+    
+    // Get all providers
+    const allProviders = await pool.query('SELECT provider_id, name, phone FROM providers ORDER BY provider_id');
+    
+    res.json({
+      success: true,
+      message: 'Database setup completed successfully! You can now test your forms.',
+      providers: allProviders.rows,
+      instructions: {
+        testWith: 'Use provider_id values: provider1, provider2, or provider3',
+        webhook: 'https://smssystem.onrender.com/webhooks/fluentforms'
+      }
     });
   } catch (error) {
     console.error('❌ Database setup failed:', error);
