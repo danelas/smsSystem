@@ -330,15 +330,8 @@ router.post('/setup/database', async (req, res) => {
     console.log('🔄 Starting database setup...');
     const pool = require('../config/database');
     
-    // Read the schema file
-    const fs = require('fs');
-    const path = require('path');
-    const schemaPath = path.join(__dirname, '../models/schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    
-    // Execute the schema
-    await pool.query(schema);
-    console.log('✅ Schema created');
+    // Skip schema creation - database already exists with different structure
+    console.log('✅ Using existing database schema');
     
     // Add providers if they don't exist (using actual database columns)
     const providerInsert = `
@@ -378,15 +371,8 @@ router.get('/setup/database', async (req, res) => {
     console.log('🔄 Starting database setup via GET...');
     const pool = require('../config/database');
     
-    // Read the schema file
-    const fs = require('fs');
-    const path = require('path');
-    const schemaPath = path.join(__dirname, '../models/schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    
-    // Execute the schema
-    await pool.query(schema);
-    console.log('✅ Schema created');
+    // Skip schema creation - database already exists with different structure
+    console.log('✅ Using existing database schema');
     
     // Add providers if they don't exist (using actual database columns)
     const providerInsert = `
