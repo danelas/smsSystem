@@ -127,9 +127,11 @@ class WebhookController {
 
     try {
       const leadId = session.metadata.lead_id;
-      const providerId = parseInt(session.metadata.provider_id);
+      const providerId = session.metadata.provider_id;
+      const now = new Date().toISOString();
 
-      console.log(`Processing payment completion for lead ${leadId}, provider ${providerId}`);
+      console.log(`🎉 PAYMENT COMPLETED! Processing checkout completion for lead ${leadId}, provider ${providerId}`);
+      console.log('Session details:', JSON.stringify(session, null, 2));
 
       // Handle duplicate payment detection
       const duplicateCheck = await Unlock.handleDuplicatePayment(leadId, providerId, session.id);
