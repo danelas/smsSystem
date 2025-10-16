@@ -77,4 +77,25 @@ router.post('/test-webhook', (req, res) => {
   });
 });
 
+// Debug endpoint to check providers in database
+router.get('/debug/providers', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const result = await pool.query('SELECT * FROM providers ORDER BY provider_id');
+    
+    console.log('=== PROVIDERS IN DATABASE ===');
+    console.log(JSON.stringify(result.rows, null, 2));
+    console.log('=== END PROVIDERS ===');
+    
+    res.json({
+      success: true,
+      providers: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching providers:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

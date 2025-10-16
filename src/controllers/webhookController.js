@@ -58,6 +58,7 @@ class WebhookController {
       // Create the lead
       const lead = await Lead.create(value);
       console.log('Lead created:', lead.lead_id);
+      console.log('Provider ID from form:', value.provider_id, 'Type:', typeof value.provider_id);
 
       // Process the lead asynchronously (with optional specific provider for testing)
       LeadProcessor.processNewLead(lead.lead_id, value.provider_id).catch(error => {
