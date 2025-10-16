@@ -26,13 +26,33 @@ class Provider {
   }
 
   static async findByPhone(phoneNumber) {
-    // Normalize phone number
-    const cleanPhone = phoneNumber.replace(/[^\d+]/g, '');
-    const query = 'SELECT * FROM providers WHERE phone = $1';
+    // Normalize phone number - try multiple formats
+    const cleanPhone = phoneNumber.replace(/[^\d]/g, ''); // Remove all non-digits
+    
+    // Try different phone number formats
+    const phoneFormats = [
+      phoneNumber, // Original format
+      `+${cleanPhone}`, // Add + prefix
+      `+1${cleanPhone.substring(1)}`, // Add +1 prefix if it starts with 1
+      cleanPhone, // Just digits
+      `1${cleanPhone}` // Add 1 prefix
+    ];
+    
+    console.log('Trying phone formats:', phoneFormats);
     
     try {
-      const result = await pool.query(query, [cleanPhone]);
-      return result.rows[0];
+      // Try each format
+      for (const format of phoneFormats) {
+        const query = 'SELECT * FROM providers WHERE phone = $1';
+        const result = await pool.query(query, [format]);
+        if (result.rows.length > 0) {
+          console.log(`Found provider with phone format: ${format}`);
+          return result.rows[0];
+        }
+      }
+      
+      console.log('No provider found with any phone format');
+      return null;
     } catch (error) {
       console.error('Error finding provider by phone:', error);
       throw error;

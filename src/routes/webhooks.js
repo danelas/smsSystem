@@ -1,7 +1,11 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const WebhookController = require('../controllers/webhookController');
 const LeadProcessor = require('../services/LeadProcessor');
+
+// Configure multer for TextMagic multipart/form-data
+const upload = multer();
 
 // FluentForms webhook endpoint
 router.post('/fluentforms', express.json(), WebhookController.handleFluentFormsWebhook);
@@ -37,7 +41,7 @@ router.get('/sms/incoming', (req, res) => {
 });
 
 // TextMagic incoming SMS webhook
-router.post('/sms/incoming', express.urlencoded({ extended: true }), async (req, res) => {
+router.post('/sms/incoming', express.json(), async (req, res) => {
   try {
     console.log('=== INCOMING SMS WEBHOOK DEBUG ===');
     console.log('Headers:', JSON.stringify(req.headers, null, 2));
