@@ -99,9 +99,10 @@
         
         <div class="note">
             <strong>📋 Instructions:</strong><br>
-            • Use the <strong>Form URLs</strong> for your homepage buttons<br>
-            • These URLs will take customers directly to forms pre-populated with the specific provider<br>
-            • Click any URL to copy it to your clipboard
+            • Use the <strong>Homepage Button URLs</strong> for your website buttons<br>
+            • These URLs go to your existing form at goldtouchmobile.com with the provider pre-selected<br>
+            • Click any URL to copy it to your clipboard<br>
+            • Make sure you've added the JavaScript to your form page to capture the provider_id
         </div>
 
         <div id="loading" class="loading">
@@ -147,22 +148,24 @@
                 const card = document.createElement('div');
                 card.className = 'provider-card';
                 
+                const homepageUrl = `https://goldtouchmobile.com/provider-request/?provider_id=${provider.id}`;
+                
                 card.innerHTML = `
                     <div class="provider-name">${provider.name} (${provider.id})</div>
                     
                     <div class="url-section recommended">
-                        <div class="url-label">🎯 Form URL (Use this for homepage buttons):</div>
-                        <div class="url-box" onclick="copyToClipboard('${provider.form_url}', this)">
-                            ${provider.form_url}
-                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${provider.form_url}', this.parentElement)">Copy</button>
+                        <div class="url-label">🎯 Homepage Button URL (Use this for your buttons):</div>
+                        <div class="url-box" onclick="copyToClipboard('${homepageUrl}', this)">
+                            ${homepageUrl}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${homepageUrl}', this.parentElement)">Copy</button>
                         </div>
                     </div>
                     
                     <div class="url-section">
-                        <div class="url-label">👤 Profile URL (Optional):</div>
-                        <div class="url-box" onclick="copyToClipboard('${provider.profile_url}', this)">
-                            ${provider.profile_url}
-                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${provider.profile_url}', this.parentElement)">Copy</button>
+                        <div class="url-label">📋 Provider ID:</div>
+                        <div class="url-box" onclick="copyToClipboard('${provider.id}', this)">
+                            ${provider.id}
+                            <button class="copy-btn" onclick="event.stopPropagation(); copyToClipboard('${provider.id}', this.parentElement)">Copy</button>
                         </div>
                     </div>
                 `;
