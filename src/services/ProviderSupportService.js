@@ -67,12 +67,22 @@ Never reveal any client data before an unlock is confirmed for that provider.`;
     console.log(`[Provider Support] Lower message: "${lowerMessage}"`);
     
     // If it's a clear lead response, not a question
-    const isLeadResponse = leadResponseIndicators.some(indicator => 
-      lowerMessage === indicator || lowerMessage.includes(indicator)
-    );
+    // Use word boundaries to avoid matching single letters within words
+    const isLeadResponse = leadResponseIndicators.some(indicator => {
+      // For single letters like 'y' or 'n', require exact match
+      if (indicator.length === 1) {
+        return lowerMessage === indicator;
+      }
+      // For longer words, allow includes but with word boundaries
+      return lowerMessage === indicator || 
+             lowerMessage.includes(` ${indicator} `) || 
+             lowerMessage.startsWith(`${indicator} `) || 
+             lowerMessage.endsWith(` ${indicator}`);
+    });
     
     if (isLeadResponse) {
-      console.log(`[Provider Support] Detected as lead response`);
+      console.log(`[Provider Support] Detected as lead response - matched indicators:`, 
+        leadResponseIndicators.filter(indicator => lowerMessage === indicator || lowerMessage.includes(indicator)));
       return false;
     }
 
