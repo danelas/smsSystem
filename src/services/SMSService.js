@@ -111,6 +111,7 @@ Gold Touch provides advertising access to client inquiries. We do not arrange or
 📞 Phone: ${privateDetails.client_phone}
 📧 Email: ${privateDetails.client_email || 'Not provided'}
 📍 Address: ${privateDetails.exact_address || `${privateDetails.city}, ${privateDetails.zip_code || ''}`}
+💬 Contact Pref: ${publicDetails.contactpref || 'Not specified'}
 
 Service: ${publicDetails.service_type}
 When: ${publicDetails.preferred_time_window ? moment(publicDetails.preferred_time_window).format('MMM D, YYYY h:mm A') : 'Flexible'}
