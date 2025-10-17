@@ -328,15 +328,15 @@ Contact the client directly. Good luck! 🍀`;
         )
       `);
       
-      // Check if we've already responded to this number
+      // Check if we've already responded to this number in the last 24 hours
       const existingResponse = await pool.query(
-        'SELECT * FROM auto_responses WHERE phone = $1',
+        'SELECT * FROM auto_responses WHERE phone = $1 AND response_sent_at > NOW() - INTERVAL \'24 hours\'',
         [phoneNumber]
       );
       
       if (existingResponse.rows.length > 0) {
-        console.log(`Already sent auto-response to ${phoneNumber}, ignoring`);
-        return { action: 'already_responded' };
+        console.log(`Already sent auto-response to ${phoneNumber} within last 24 hours, ignoring`);
+        return { action: 'already_responded_today' };
       }
       
       // Send the auto-response message
@@ -344,9 +344,9 @@ Contact the client directly. Good luck! 🍀`;
       
       await this.sendSMS(phoneNumber, autoResponseMessage);
       
-      // Record that we've sent the auto-response
+      // Record that we've sent the auto-response (update timestamp if exists)
       await pool.query(
-        'INSERT INTO auto_responses (phone) VALUES ($1) ON CONFLICT (phone) DO NOTHING',
+        'INSERT INTO auto_responses (phone, response_sent_at) VALUES ($1, NOW()) ON CONFLICT (phone) DO UPDATE SET response_sent_at = NOW()',
         [phoneNumber]
       );
       
