@@ -81,13 +81,21 @@ Gold Touch - Lead access fee only.`;
       moment(leadData.preferred_time_window).format('MMM D, YYYY h:mm A') : 
       'Flexible';
 
+    // Show contact preference info if available
+    let contactInfo = '';
+    if (leadData.contactpref) {
+      contactInfo = `Contact Pref: ${leadData.contactpref}`;
+      if (leadData.contactpref === 'Email' && leadData.email) {
+        contactInfo += ` (${leadData.email})`;
+      }
+    }
+
     return `📋 BOOKING REQUEST AVAILABLE
 Service: ${leadData.service_type}
 Location: ${leadData.city}
 When: ${timeWindow}
-Session: ${leadData.session_length || 'Not specified'}
-Contact Pref: ${leadData.contact_preference || 'Not specified'}
-
+Session: ${leadData.session_length || leadData.length || 'Not specified'}
+${contactInfo ? contactInfo + '\n' : ''}
 💰 Unlock full contact details for $20
 Reply Y to proceed, N to pass
 
