@@ -12,6 +12,7 @@ const fluentFormsSchema = Joi.object({
   type: Joi.string().required(),
   location: Joi.string().allow(''),
   contactpref: Joi.string().allow(''),
+  email: Joi.string().email().allow('').optional(), // Optional email field
   provider_id: Joi.alternatives().try(
     Joi.number().integer(),
     Joi.string().pattern(/^provider(\d+)$/)
