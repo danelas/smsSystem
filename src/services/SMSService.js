@@ -137,9 +137,12 @@ Contact the client directly. Good luck! 🍀`;
     const Unlock = require('../models/Unlock');
     const Provider = require('../models/Provider');
     const StripeService = require('./StripeService');
+    const ProviderSupportService = require('./ProviderSupportService');
     
-    // Normalize message: uppercase and trim spaces
-    const message = messageBody.trim().toUpperCase();
+    // Keep original message for AI processing
+    const originalMessage = messageBody.trim();
+    // Normalize message for lead responses: uppercase and trim spaces
+    const message = originalMessage.toUpperCase();
     
     try {
       // Handle STOP requests
@@ -159,6 +162,15 @@ Contact the client directly. Good luck! 🍀`;
         console.log('Unknown phone number:', phoneNumber);
         await this.handleUnknownNumber(phoneNumber);
         return { action: 'unknown_number_auto_responded' };
+      }
+
+      // Check if this is a provider support question
+      const supportResult = await ProviderSupportService.handleProviderMessage(phoneNumber, originalMessage);
+      
+      if (supportResult.isQuestion) {
+        // Send AI-generated support response
+        await this.sendSMS(phoneNumber, supportResult.response);
+        return { action: 'ai_support_response', response: supportResult.response };
       }
       
       console.log('Found provider:', JSON.stringify(provider, null, 2));

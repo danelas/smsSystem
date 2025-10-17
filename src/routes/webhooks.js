@@ -6,6 +6,9 @@ const LeadProcessor = require('../services/LeadProcessor');
 // FluentForms webhook endpoint
 router.post('/fluentforms', express.json(), WebhookController.handleFluentFormsWebhook);
 
+// Provider registration webhook (for MyListing theme)
+router.post('/provider-registration', express.json(), WebhookController.handleProviderRegistration);
+
 // GET handler for debugging (when someone visits the URL in browser)
 router.get('/fluentforms', (req, res) => {
   console.log('=== GET REQUEST TO FLUENTFORMS WEBHOOK ===');
