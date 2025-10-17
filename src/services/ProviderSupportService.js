@@ -54,7 +54,7 @@ Never reveal any client data before an unlock is confirmed for that provider.`;
       'help', 'info', 'explain', 'tell me', 'understand',
       'work', 'cost', 'price', 'fee', 'charge', 'pay',
       'location', 'area', 'commission', 'cut', 'earn',
-      'often', 'many', 'request', 'lead', 'client'
+      'often', 'many', 'request', 'lead', 'client', 'question'
     ];
 
     const leadResponseIndicators = [
@@ -63,17 +63,28 @@ Never reveal any client data before an unlock is confirmed for that provider.`;
 
     const lowerMessage = message.toLowerCase().trim();
     
+    console.log(`[Provider Support] Analyzing message: "${message}"`);
+    console.log(`[Provider Support] Lower message: "${lowerMessage}"`);
+    
     // If it's a clear lead response, not a question
-    if (leadResponseIndicators.some(indicator => 
+    const isLeadResponse = leadResponseIndicators.some(indicator => 
       lowerMessage === indicator || lowerMessage.includes(indicator)
-    )) {
+    );
+    
+    if (isLeadResponse) {
+      console.log(`[Provider Support] Detected as lead response`);
       return false;
     }
 
     // If it contains question indicators, likely a question
-    return questionIndicators.some(indicator => 
+    const hasQuestionIndicator = questionIndicators.some(indicator => 
       lowerMessage.includes(indicator)
     );
+    
+    console.log(`[Provider Support] Has question indicator: ${hasQuestionIndicator}`);
+    console.log(`[Provider Support] Question indicators found:`, questionIndicators.filter(indicator => lowerMessage.includes(indicator)));
+    
+    return hasQuestionIndicator;
   }
 
   /**
