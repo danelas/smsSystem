@@ -116,7 +116,7 @@ Never reveal any client data before an unlock is confirmed for that provider.`;
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4',
         messages: messages,
-        max_tokens: 150, // Keep responses short for SMS
+        max_tokens: 100, // Keep responses very short for SMS
         temperature: 0.7
       });
 

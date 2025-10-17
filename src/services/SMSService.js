@@ -254,9 +254,18 @@ Contact the client directly. Good luck! 🍀`;
         }
       }
 
-      // For any unrecognized response, send helper message
-      await this.sendHelpMessage(phoneNumber);
-      return { action: 'unrecognized_response' };
+      // Only send help message if it looks like they're trying to respond to a lead
+      // Don't send help for casual greetings or random messages
+      const looksLikeLeadResponse = /^[yn]|yes|no|interested|maybe|sure|ok/i.test(message.trim());
+      
+      if (looksLikeLeadResponse) {
+        await this.sendHelpMessage(phoneNumber);
+        return { action: 'unrecognized_response_with_help' };
+      }
+      
+      // For casual messages like "hi", "hello", etc. - just log and ignore
+      console.log(`Ignoring casual message from provider ${providerId}: "${message}"`);
+      return { action: 'ignored_casual_message' };
 
     } catch (error) {
       console.error('Error processing incoming message:', error);
