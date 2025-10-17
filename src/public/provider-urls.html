@@ -114,16 +114,26 @@
     <script>
         async function loadProviders() {
             try {
+                console.log('Fetching providers from /providers...');
                 const response = await fetch('/providers');
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.success) {
                     displayProviders(data.providers);
                 } else {
-                    document.getElementById('loading').innerHTML = '❌ Error: ' + data.error;
+                    document.getElementById('loading').innerHTML = '❌ Error: ' + (data.error || 'Unknown error');
                 }
             } catch (error) {
-                document.getElementById('loading').innerHTML = '❌ Error loading providers: ' + error.message;
+                console.error('Error loading providers:', error);
+                document.getElementById('loading').innerHTML = '❌ Error loading providers: ' + error.message + '<br><br>Check browser console for details.';
             }
         }
 
