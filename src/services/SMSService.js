@@ -149,8 +149,9 @@ Contact the client directly. Good luck! 🍀`;
 
       const provider = await Provider.findByPhone(phoneNumber);
       if (!provider) {
-        console.log('Unknown provider phone number:', phoneNumber);
-        return { action: 'unknown_provider' };
+        console.log('Unknown phone number:', phoneNumber);
+        await this.handleUnknownNumber(phoneNumber);
+        return { action: 'unknown_number_auto_responded' };
       }
       
       console.log('Found provider:', JSON.stringify(provider, null, 2));
@@ -281,6 +282,51 @@ Contact the client directly. Good luck! 🍀`;
       return result.rows[0];
     } catch (error) {
       console.error('Error getting most recent unlock:', error);
+      throw error;
+    }
+  }
+
+  async handleUnknownNumber(phoneNumber) {
+    try {
+      // Check if we've already sent the auto-responder to this number
+      const pool = require('../config/database');
+      
+      // Create table for tracking auto-responses if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS auto_responses (
+          phone VARCHAR(20) PRIMARY KEY,
+          first_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          response_sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Check if we've already responded to this number
+      const existingResponse = await pool.query(
+        'SELECT * FROM auto_responses WHERE phone = $1',
+        [phoneNumber]
+      );
+      
+      if (existingResponse.rows.length > 0) {
+        console.log(`Already sent auto-response to ${phoneNumber}, ignoring`);
+        return { action: 'already_responded' };
+      }
+      
+      // Send the auto-response message
+      const autoResponseMessage = "Hi! Thanks for contacting Gold Touch.\nVisit goldtouchmobile.com to browse verified wellness providers and contact them directly for your session.";
+      
+      await this.sendSMS(phoneNumber, autoResponseMessage);
+      
+      // Record that we've sent the auto-response
+      await pool.query(
+        'INSERT INTO auto_responses (phone) VALUES ($1) ON CONFLICT (phone) DO NOTHING',
+        [phoneNumber]
+      );
+      
+      console.log(`Sent auto-response to unknown number: ${phoneNumber}`);
+      return { action: 'auto_response_sent' };
+      
+    } catch (error) {
+      console.error('Error handling unknown number:', error);
       throw error;
     }
   }
