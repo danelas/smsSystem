@@ -105,7 +105,7 @@ Gold Touch provides advertising access to client inquiries. We do not arrange or
   }
 
   formatRevealMessage(privateDetails, publicDetails, leadId) {
-    return `🔓 LEAD UNLOCKED - Contact Details
+    return `🔓 Client Request Unlocked
 
 👤 Client: ${privateDetails.client_name}
 📞 Phone: ${privateDetails.client_phone}
@@ -115,8 +115,6 @@ Gold Touch provides advertising access to client inquiries. We do not arrange or
 
 Service: ${publicDetails.service_type}
 When: ${publicDetails.preferred_time_window ? moment(publicDetails.preferred_time_window).format('MMM D, YYYY h:mm A') : 'Flexible'}
-
-Lead ID: ${leadId}
 
 Contact the client directly. Good luck! 🍀`;
   }
