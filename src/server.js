@@ -12,6 +12,7 @@ const apiRoutes = require('./routes/api');
 const unlockRoutes = require('./routes/unlocks');
 const providerRoutes = require('./routes/providers');
 const analyticsRoutes = require('./routes/analytics');
+const recoveryRoutes = require('./routes/recovery');
 
 // Import services for initialization
 const pool = require('./config/database');
@@ -77,6 +78,7 @@ app.use('/api', apiRoutes);
 app.use('/unlocks', unlockRoutes);
 app.use('/providers', providerRoutes);
 app.use('/analytics', analyticsRoutes);
+app.use('/recovery', recoveryRoutes);
 app.use('/form', providerRoutes); // Also handle /form/:slug routes
 
 // Provider URLs page
@@ -104,6 +106,11 @@ app.get('/', (req, res) => {
         recent_activity: '/analytics/recent-activity?days=7',
         conversion_funnel: '/analytics/conversion-funnel',
         scheduled_leads: '/analytics/scheduled-leads'
+      },
+      recovery: {
+        missed_leads: '/recovery/missed-leads?hours=24',
+        process_missed_leads: '/recovery/process-missed-leads',
+        recent_leads_status: '/recovery/recent-leads-status?hours=24'
       }
     },
     version: '1.0.0'
