@@ -55,8 +55,6 @@ class SMSService {
     
     const message = `🔓 Pay $20 to unlock lead: ${shortUrl}
 
-Lead: ${leadId.substring(0, 8)}...
-
 Gold Touch - Lead access fee only.`;
     
     console.log('Payment SMS length:', message.length);
@@ -98,8 +96,6 @@ Session: ${leadData.session_length || leadData.length || 'Not specified'}
 ${contactInfo ? contactInfo + '\n' : ''}
 💰 Unlock full contact details for $20
 Reply Y to proceed, N to pass
-
-Lead ID: ${leadId}
 
 Gold Touch provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
   }

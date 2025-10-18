@@ -27,7 +27,16 @@ class OpenAIService {
         max_tokens: 1000
       });
 
-      const result = JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      if (content.startsWith('```json')) {
+        content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (content.startsWith('```')) {
+        content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      const result = JSON.parse(content);
       return result;
 
     } catch (error) {
@@ -122,7 +131,16 @@ Respond with JSON:
         max_tokens: 300
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      if (content.startsWith('```json')) {
+        content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (content.startsWith('```')) {
+        content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      return JSON.parse(content);
 
     } catch (error) {
       console.error('Error generating teaser enhancement:', error);
@@ -238,7 +256,16 @@ Respond with JSON:
         max_tokens: 300
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      let content = response.choices[0].message.content.trim();
+      
+      // Remove markdown code blocks if present
+      if (content.startsWith('```json')) {
+        content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (content.startsWith('```')) {
+        content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      return JSON.parse(content);
 
     } catch (error) {
       console.error('Error generating follow-up message:', error);
