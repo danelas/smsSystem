@@ -15,6 +15,7 @@ const analyticsRoutes = require('./routes/analytics');
 
 // Import services for initialization
 const pool = require('./config/database');
+const LeadScheduler = require('./services/LeadScheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -101,7 +102,8 @@ app.get('/', (req, res) => {
       analytics: {
         provider_performance: '/analytics/providers',
         recent_activity: '/analytics/recent-activity?days=7',
-        conversion_funnel: '/analytics/conversion-funnel'
+        conversion_funnel: '/analytics/conversion-funnel',
+        scheduled_leads: '/analytics/scheduled-leads'
       }
     },
     version: '1.0.0'
@@ -153,6 +155,9 @@ process.on('SIGTERM', async () => {
 app.listen(PORT, () => {
   console.log(`Gold Touch Lead Unlock System running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Start the lead scheduler
+  LeadScheduler.startScheduler();
   
   // Test database connection
   pool.query('SELECT NOW()', (err, result) => {

@@ -142,4 +142,48 @@ router.get('/conversion-funnel', async (req, res) => {
   }
 });
 
+// Scheduled leads status
+router.get('/scheduled-leads', async (req, res) => {
+  try {
+    const LeadScheduler = require('../services/LeadScheduler');
+    
+    // Get scheduled leads status
+    const status = await LeadScheduler.getScheduledLeadsStatus();
+    
+    // Get detailed pending leads
+    const pendingLeads = await pool.query(`
+      SELECT 
+        sl.*,
+        p.name as provider_name,
+        l.client_name,
+        l.service_type,
+        l.city
+      FROM scheduled_leads sl
+      JOIN providers p ON sl.provider_id = p.id
+      JOIN leads l ON sl.lead_id = l.lead_id
+      WHERE sl.status = 'pending'
+      ORDER BY sl.scheduled_for ASC
+      LIMIT 20
+    `);
+    
+    res.json({
+      success: true,
+      status_summary: status,
+      pending_leads: pendingLeads.rows,
+      business_hours_info: {
+        current_time: new Date(),
+        is_business_hours: LeadScheduler.isBusinessHours(),
+        next_business_hour: LeadScheduler.getNextBusinessHour()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting scheduled leads:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get scheduled leads'
+    });
+  }
+});
+
 module.exports = router;

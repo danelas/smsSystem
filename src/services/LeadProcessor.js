@@ -67,9 +67,22 @@ class LeadProcessor {
       // Enhance the teaser with OpenAI
       const teaserEnhancement = await OpenAIService.generateTeaserEnhancement(publicLeadData);
 
-      // Process each matched provider
-      for (const match of matchingResult.matches) {
-        await LeadProcessor.processProviderMatch(leadId, match, publicLeadData, teaserEnhancement);
+      // Check if we should schedule leads or process immediately
+      const LeadScheduler = require('./LeadScheduler');
+      const shouldSchedule = !LeadScheduler.isBusinessHours();
+      
+      if (shouldSchedule) {
+        console.log('Outside business hours - scheduling leads for later processing');
+        // Schedule each matched provider
+        for (const match of matchingResult.matches) {
+          await LeadScheduler.scheduleLeadProcessing(leadId, match.provider_id);
+        }
+      } else {
+        console.log('Within business hours - processing leads immediately');
+        // Process each matched provider immediately
+        for (const match of matchingResult.matches) {
+          await LeadProcessor.processProviderMatch(leadId, match, publicLeadData, teaserEnhancement);
+        }
       }
 
       console.log(`Lead processing completed for ${leadId}`);
