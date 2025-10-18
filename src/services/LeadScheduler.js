@@ -57,6 +57,24 @@ class LeadScheduler {
   }
 
   /**
+   * Ensure scheduled_leads table exists
+   */
+  async ensureScheduledLeadsTable() {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS scheduled_leads (
+        id SERIAL PRIMARY KEY,
+        lead_id VARCHAR(255) NOT NULL,
+        provider_id VARCHAR(50) NOT NULL,
+        scheduled_for TIMESTAMP NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        processed_at TIMESTAMP NULL,
+        UNIQUE(lead_id, provider_id)
+      )
+    `);
+  }
+
+  /**
    * Schedule a lead for processing
    */
   async scheduleLeadProcessing(leadId, providerId, scheduledFor = null) {
@@ -64,18 +82,7 @@ class LeadScheduler {
       const scheduleTime = scheduledFor || this.getNextBusinessHour();
       
       // Create scheduled_leads table if it doesn't exist
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS scheduled_leads (
-          id SERIAL PRIMARY KEY,
-          lead_id VARCHAR(255) NOT NULL,
-          provider_id VARCHAR(50) NOT NULL,
-          scheduled_for TIMESTAMP NOT NULL,
-          status VARCHAR(20) DEFAULT 'pending',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          processed_at TIMESTAMP NULL,
-          UNIQUE(lead_id, provider_id)
-        )
-      `);
+      await this.ensureScheduledLeadsTable();
       
       // Insert scheduled lead
       const result = await pool.query(`
@@ -100,6 +107,9 @@ class LeadScheduler {
    */
   async processPendingScheduledLeads() {
     try {
+      // Ensure the scheduled_leads table exists
+      await this.ensureScheduledLeadsTable();
+      
       const now = new Date();
       
       // Get all pending scheduled leads that are due
@@ -201,6 +211,9 @@ class LeadScheduler {
    */
   async getScheduledLeadsStatus() {
     try {
+      // Ensure table exists first
+      await this.ensureScheduledLeadsTable();
+      
       const result = await pool.query(`
         SELECT 
           status,
