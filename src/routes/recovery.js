@@ -3,10 +3,19 @@ const router = express.Router();
 const pool = require('../config/database');
 const LeadProcessor = require('../services/LeadProcessor');
 
-// Find and process missed leads
-router.post('/process-missed-leads', async (req, res) => {
+// Test endpoint to verify recovery routes are working
+router.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Recovery routes are working!',
+    timestamp: new Date()
+  });
+});
+
+// Find and process missed leads (GET version for easy testing)
+router.get('/process-missed-leads', async (req, res) => {
   try {
-    const { hours = 24 } = req.body; // Default to last 24 hours
+    const { hours = 48 } = req.query; // Default to last 48 hours
     
     // Find leads that were created but never sent to providers
     const missedLeadsQuery = `
