@@ -162,11 +162,16 @@ LEAD DATA:
 - Phone: ${leadData.client_phone ? 'Provided' : 'Missing'}
 - Service: ${leadData.service_type}
 - Location: ${leadData.city}
-- Time: ${leadData.date_time || 'Not specified'}
+- Preferred Date: ${leadData.preferred_time_window || leadData.date_time || 'Not specified'}
 - Session Length: ${leadData.session_length || 'Not specified'}
 - Location Type: ${leadData.location_type || 'Not specified'}
 
 Rate the lead quality and identify any issues:
+
+IMPORTANT: 
+- Date without specific time is acceptable (client can discuss timing later)
+- Session length and location type are helpful but not critical for initial contact
+- Focus on whether there's enough info for a provider to assess interest
 
 Respond with JSON:
 {

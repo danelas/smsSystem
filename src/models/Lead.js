@@ -20,14 +20,14 @@ class Lead {
 
     const query = `
       INSERT INTO leads (
-        city, service_type, preferred_time_window, budget_range, notes_snippet,
+        city, service_type, preferred_time_window, session_length, location_type, notes_snippet,
         client_name, client_phone, client_email, exact_address
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `;
 
     const values = [
-      city, type, date_time, length, notes_snippet,
+      city, type, date_time, length, location, notes_snippet,
       name, phone, email, exact_address
     ];
 

@@ -166,12 +166,20 @@ app.listen(PORT, () => {
   // Start the lead scheduler
   LeadScheduler.startScheduler();
   
-  // Test database connection
-  pool.query('SELECT NOW()', (err, result) => {
+  // Test database connection and run migrations
+  pool.query('SELECT NOW()', async (err, result) => {
     if (err) {
       console.error('Database connection failed:', err);
     } else {
       console.log('Database connected successfully');
+      
+      // Run database migrations
+      try {
+        const addMissingLeadColumns = require('./migrations/add_missing_lead_columns');
+        await addMissingLeadColumns();
+      } catch (migrationError) {
+        console.error('Migration error:', migrationError);
+      }
     }
   });
 });
