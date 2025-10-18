@@ -11,6 +11,7 @@ const webhookRoutes = require('./routes/webhooks');
 const apiRoutes = require('./routes/api');
 const unlockRoutes = require('./routes/unlocks');
 const providerRoutes = require('./routes/providers');
+const analyticsRoutes = require('./routes/analytics');
 
 // Import services for initialization
 const pool = require('./config/database');
@@ -74,6 +75,7 @@ app.use('/webhooks', webhookRoutes);
 app.use('/api', apiRoutes);
 app.use('/unlocks', unlockRoutes);
 app.use('/providers', providerRoutes);
+app.use('/analytics', analyticsRoutes);
 app.use('/form', providerRoutes); // Also handle /form/:slug routes
 
 // Provider URLs page
@@ -89,17 +91,20 @@ app.get('/form/:slug', (req, res) => {
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    name: 'Gold Touch Lead Unlock System',
-    version: '1.0.0',
+    message: 'Gold Touch Lead Management System',
     status: 'running',
     endpoints: {
-      webhooks: '/webhooks',
-      api: '/api',
-      unlocks: '/unlocks',
+      webhooks: '/webhooks/fluentforms',
       providers: '/providers',
-      'provider-urls': '/provider-urls'
+      unlocks: '/unlocks',
+      provider_urls: '/provider-urls',
+      analytics: {
+        provider_performance: '/analytics/providers',
+        recent_activity: '/analytics/recent-activity?days=7',
+        conversion_funnel: '/analytics/conversion-funnel'
+      }
     },
-    timestamp: new Date().toISOString()
+    version: '1.0.0'
   });
 });
 
