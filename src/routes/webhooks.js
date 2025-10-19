@@ -25,6 +25,22 @@ router.get('/fluentforms', (req, res) => {
 // Stripe webhook endpoint (needs raw body)
 router.post('/stripe', express.raw({ type: 'application/json' }), WebhookController.handleStripeWebhook);
 
+// GET handler for Stripe webhook (for testing connectivity)
+router.get('/stripe', (req, res) => {
+  console.log('=== GET REQUEST TO STRIPE WEBHOOK ===');
+  console.log('Stripe should send POST requests to this URL');
+  console.log('=== END GET REQUEST ===');
+  
+  res.json({
+    message: 'Stripe webhook endpoint is reachable',
+    method: 'POST required',
+    url: 'https://smssystem.onrender.com/webhooks/stripe',
+    instructions: 'Configure this URL in Stripe Dashboard → Webhooks',
+    events_to_listen: ['checkout.session.completed'],
+    status: 'ready'
+  });
+});
+
 // TextMagic incoming SMS webhook (GET for testing)
 router.get('/sms/incoming', (req, res) => {
   console.log('GET request to SMS webhook - this is for testing');
