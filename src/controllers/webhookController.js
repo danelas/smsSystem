@@ -225,6 +225,11 @@ class WebhookController {
       console.log(`Checkout session completed for lead ${leadId}, provider ${providerId}`);
       console.log('Session ID:', session.id);
       console.log('Payment status:', session.payment_status);
+      console.log('Session mode:', session.mode);
+      console.log('Amount total:', session.amount_total);
+      console.log('Currency:', session.currency);
+      console.log('Session status:', session.status);
+      console.log('Full session object:', JSON.stringify(session, null, 2));
       
       // CRITICAL: Only process if payment is actually completed
       if (session.payment_status !== 'paid') {
