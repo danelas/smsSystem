@@ -13,6 +13,7 @@ const unlockRoutes = require('./routes/unlocks');
 const providerRoutes = require('./routes/providers');
 const analyticsRoutes = require('./routes/analytics');
 const recoveryRoutes = require('./routes/recovery');
+const diagnosticsRoutes = require('./routes/diagnostics');
 
 // Import services for initialization
 const pool = require('./config/database');
@@ -79,6 +80,7 @@ app.use('/unlocks', unlockRoutes);
 app.use('/providers', providerRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/recovery', recoveryRoutes);
+app.use('/diagnostics', diagnosticsRoutes);
 app.use('/form', providerRoutes); // Also handle /form/:slug routes
 
 // Provider URLs page

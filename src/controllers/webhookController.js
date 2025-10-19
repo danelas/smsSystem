@@ -49,6 +49,45 @@ class WebhookController {
         formData = req.body.form_data;
       }
 
+      // Debug: Log the raw form data to understand the structure
+      console.log('Raw form data structure:', JSON.stringify(formData, null, 2));
+      console.log('Original req.body:', JSON.stringify(req.body, null, 2));
+      
+      // Fix field values that might be labels instead of actual values
+      if (formData.length === 'Session Length Preference') {
+        console.log('Detected field label instead of value for length field');
+        
+        // Try to find the actual value in the original request body
+        if (req.body.data && req.body.data.fields && req.body.data.fields.length) {
+          const lengthField = req.body.data.fields.length;
+          console.log('Length field details:', JSON.stringify(lengthField, null, 2));
+          
+          // Look for actual selected value in different possible locations
+          if (lengthField.selected_value) {
+            formData.length = lengthField.selected_value;
+          } else if (lengthField.raw_value) {
+            formData.length = lengthField.raw_value;
+          } else if (lengthField.options && lengthField.options.length > 0) {
+            // If we have options, try to find the selected one
+            const selectedOption = lengthField.options.find(opt => opt.selected);
+            if (selectedOption) {
+              formData.length = selectedOption.value || selectedOption.label;
+            }
+          }
+        }
+        
+        // If still no value found, set to not specified
+        if (formData.length === 'Session Length Preference') {
+          formData.length = 'Not specified';
+        }
+      }
+      
+      // Clean up date_time field - remove time if it's just default midnight
+      if (formData.date_time && formData.date_time.includes('12:00:00 AM')) {
+        formData.date_time = formData.date_time.replace(/\s+12:00:00 AM/, '').trim();
+        console.log('Cleaned date_time field:', formData.date_time);
+      }
+
       // Validate the form data
       const { error, value } = fluentFormsSchema.validate(formData);
       if (error) {
