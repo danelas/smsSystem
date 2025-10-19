@@ -1,3 +1,9 @@
+// Ensure crypto module is available before initializing Stripe
+const crypto = require('crypto');
+if (!global.crypto) {
+  global.crypto = crypto;
+}
+
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Unlock = require('../models/Unlock');
 

@@ -148,6 +148,13 @@ class WebhookController {
     // Verify crypto is available
     console.log('Stripe webhook handler - crypto available:', typeof crypto);
     console.log('Stripe webhook handler - crypto.createHmac available:', typeof crypto.createHmac);
+    console.log('Stripe webhook handler - global.crypto available:', typeof global.crypto);
+    
+    // Ensure crypto is available globally for Stripe
+    if (!global.crypto && typeof crypto !== 'undefined') {
+      global.crypto = crypto;
+      console.log('Set global.crypto from local crypto module');
+    }
     
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -156,9 +163,34 @@ class WebhookController {
 
     try {
       const sig = req.headers['stripe-signature'];
+      
+      // Additional validation
+      if (!sig) {
+        console.error('Missing Stripe signature header');
+        return res.status(400).send('Webhook Error: Missing stripe-signature header');
+      }
+      
+      if (!endpointSecret) {
+        console.error('Missing STRIPE_WEBHOOK_SECRET environment variable');
+        return res.status(500).send('Webhook Error: Server configuration error');
+      }
+      
+      if (!req.body) {
+        console.error('Missing request body');
+        return res.status(400).send('Webhook Error: Missing request body');
+      }
+      
+      console.log('Attempting to construct event with:');
+      console.log('- Body type:', typeof req.body);
+      console.log('- Body length:', req.body.length || 0);
+      console.log('- Signature present:', !!sig);
+      console.log('- Secret configured:', !!endpointSecret);
+      
       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+      console.log('✅ Webhook signature verified successfully');
     } catch (err) {
       console.error('Stripe webhook signature verification failed:', err.message);
+      console.error('Error stack:', err.stack);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
