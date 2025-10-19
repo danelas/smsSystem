@@ -3,10 +3,10 @@ const pool = require('../config/database');
 
 class LeadScheduler {
   constructor() {
-    // Default business hours (can be made configurable per provider later)
+    // TEMPORARY: 24/7 business hours for testing
     this.defaultBusinessHours = {
-      start: 8, // 8 AM ET
-      end: 21,  // 9 PM ET (21:00 in 24-hour format)
+      start: 0, // 12 AM (midnight)
+      end: 24,  // 12 AM next day (24:00 = always open)
       timezone: 'America/New_York', // Eastern Time
       days: [1, 2, 3, 4, 5, 6, 7] // Monday-Sunday (1=Monday, 7=Sunday)
     };
@@ -24,6 +24,10 @@ class LeadScheduler {
     
     const isValidDay = days.includes(day);
     const isValidHour = hour >= start && hour < end;
+    
+    console.log(`Business hours check: Current time in ${timezone}: ${now.format('YYYY-MM-DD HH:mm:ss z')}`);
+    console.log(`Hour: ${hour}, Day: ${day}, Valid day: ${isValidDay}, Valid hour: ${isValidHour} (${start}-${end})`);
+    console.log(`Is business hours: ${isValidDay && isValidHour}`);
     
     return isValidDay && isValidHour;
   }
@@ -52,6 +56,8 @@ class LeadScheduler {
     while (!this.defaultBusinessHours.days.includes(nextBusinessTime.isoWeekday())) {
       nextBusinessTime = nextBusinessTime.add(1, 'day');
     }
+    
+    console.log(`Next business hour scheduled for: ${nextBusinessTime.format('YYYY-MM-DD HH:mm:ss z')} (${timezone})`);
     
     return nextBusinessTime.toDate();
   }
