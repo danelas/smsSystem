@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto'); // Ensure crypto is available
 const WebhookController = require('../controllers/webhookController');
 const LeadProcessor = require('../services/LeadProcessor');
 
@@ -182,7 +183,6 @@ router.post('/test/payment-complete', express.json(), async (req, res) => {
     console.log(`🧪 Manual payment completion test for lead ${leadId}, provider ${providerId}`);
     
     // Simulate the payment completion
-    const WebhookController = require('../controllers/webhookController');
     const mockSession = {
       id: 'cs_test_manual_' + Date.now(),
       metadata: {

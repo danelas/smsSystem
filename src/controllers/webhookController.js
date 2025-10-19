@@ -145,6 +145,10 @@ class WebhookController {
   }
 
   static async handleStripeWebhook(req, res) {
+    // Verify crypto is available
+    console.log('Stripe webhook handler - crypto available:', typeof crypto);
+    console.log('Stripe webhook handler - crypto.createHmac available:', typeof crypto.createHmac);
+    
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
