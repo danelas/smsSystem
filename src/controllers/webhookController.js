@@ -195,13 +195,18 @@ class WebhookController {
     }
 
     try {
+      console.log('Webhook event type:', event.type);
+      
       if (event.type === 'checkout.session.completed') {
         await WebhookController.handleCheckoutCompleted(event.data.object);
+      } else {
+        console.log(`ℹ️ Ignoring webhook event type: ${event.type}`);
       }
 
       res.json({ received: true });
     } catch (error) {
       console.error('Error handling Stripe webhook:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Webhook processing failed' });
     }
   }
