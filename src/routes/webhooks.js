@@ -365,6 +365,156 @@ router.post('/setup/database', async (req, res) => {
   }
 });
 
+// Stripe environment diagnostic endpoint
+router.get('/stripe/diagnostics', (req, res) => {
+  try {
+    console.log('=== STRIPE ENVIRONMENT DIAGNOSTICS ===');
+    
+    const diagnostics = {
+      timestamp: new Date().toISOString(),
+      node_version: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      crypto_available: typeof crypto,
+      crypto_methods: {},
+      stripe_config: {},
+      environment_vars: {},
+      modules: {}
+    };
+
+    // Check crypto methods
+    if (typeof crypto === 'object') {
+      diagnostics.crypto_methods = {
+        createHmac: typeof crypto.createHmac,
+        createHash: typeof crypto.createHash,
+        randomBytes: typeof crypto.randomBytes,
+        constants: typeof crypto.constants
+      };
+    }
+
+    // Check Stripe configuration (without exposing secrets)
+    try {
+      const stripe = require('stripe');
+      diagnostics.stripe_config = {
+        stripe_module_loaded: typeof stripe,
+        secret_key_configured: !!process.env.STRIPE_SECRET_KEY,
+        webhook_secret_configured: !!process.env.STRIPE_WEBHOOK_SECRET,
+        secret_key_length: process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.length : 0,
+        webhook_secret_length: process.env.STRIPE_WEBHOOK_SECRET ? process.env.STRIPE_WEBHOOK_SECRET.length : 0
+      };
+    } catch (stripeError) {
+      diagnostics.stripe_config.error = stripeError.message;
+    }
+
+    // Check environment variables (without exposing values)
+    diagnostics.environment_vars = {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      has_database_url: !!process.env.DATABASE_URL,
+      has_textmagic_config: !!(process.env.TEXTMAGIC_USERNAME && process.env.TEXTMAGIC_API_KEY)
+    };
+
+    // Check loaded modules
+    try {
+      diagnostics.modules = {
+        crypto_builtin: !!require.resolve('crypto'),
+        stripe_installed: !!require.resolve('stripe'),
+        express_installed: !!require.resolve('express')
+      };
+    } catch (moduleError) {
+      diagnostics.modules.error = moduleError.message;
+    }
+
+    console.log('Diagnostics result:', JSON.stringify(diagnostics, null, 2));
+    console.log('=== END STRIPE DIAGNOSTICS ===');
+
+    res.json({
+      success: true,
+      diagnostics: diagnostics,
+      recommendations: [
+        'Check if crypto_available shows "object"',
+        'Verify stripe_module_loaded shows "function"', 
+        'Ensure secret keys are configured',
+        'Node version should be >= 18 for full crypto support'
+      ]
+    });
+
+  } catch (error) {
+    console.error('Diagnostics failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Test Stripe webhook signature verification
+router.post('/stripe/test-signature', express.raw({ type: 'application/json' }), (req, res) => {
+  try {
+    console.log('=== STRIPE SIGNATURE TEST ===');
+    
+    const testResult = {
+      timestamp: new Date().toISOString(),
+      crypto_available: typeof crypto,
+      body_type: typeof req.body,
+      body_length: req.body ? req.body.length : 0,
+      headers: req.headers,
+      signature_header: req.headers['stripe-signature']
+    };
+
+    // Try to use crypto directly
+    if (typeof crypto === 'object') {
+      try {
+        const testHash = crypto.createHmac('sha256', 'test-secret').update('test-data').digest('hex');
+        testResult.crypto_test = {
+          success: true,
+          test_hash: testHash
+        };
+      } catch (cryptoError) {
+        testResult.crypto_test = {
+          success: false,
+          error: cryptoError.message
+        };
+      }
+    }
+
+    // Try Stripe webhook construction with dummy data
+    try {
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test';
+      
+      // This will likely fail but we want to see the exact error
+      const dummyPayload = JSON.stringify({ test: true });
+      const dummySignature = 'dummy_signature';
+      
+      stripe.webhooks.constructEvent(dummyPayload, dummySignature, endpointSecret);
+      
+    } catch (stripeError) {
+      testResult.stripe_test = {
+        error: stripeError.message,
+        stack: stripeError.stack
+      };
+    }
+
+    console.log('Signature test result:', JSON.stringify(testResult, null, 2));
+    console.log('=== END SIGNATURE TEST ===');
+
+    res.json({
+      success: true,
+      test_result: testResult
+    });
+
+  } catch (error) {
+    console.error('Signature test failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // GET version for easy browser access
 router.get('/setup/database', async (req, res) => {
   try {
