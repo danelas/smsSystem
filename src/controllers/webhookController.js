@@ -1,6 +1,7 @@
 const Lead = require('../models/Lead');
 const LeadProcessor = require('../services/LeadProcessor');
 const Joi = require('joi');
+const crypto = require('crypto');
 
 // Validation schema for FluentForms data
 const fluentFormsSchema = Joi.object({
@@ -82,11 +83,21 @@ class WebhookController {
         }
       }
       
-      // Clean up date_time field - remove time if it's just default midnight
-      if (formData.date_time && formData.date_time.includes('12:00:00 AM')) {
-        formData.date_time = formData.date_time.replace(/\s+12:00:00 AM/, '').trim();
+      // Clean up date_time field - remove any default time that FluentForms adds
+      if (formData.date_time) {
+        // Remove various time formats that FluentForms might add
+        formData.date_time = formData.date_time
+          .replace(/\s+12:00:00 AM/i, '')
+          .replace(/\s+00:00:00/i, '')
+          .replace(/\s+12:00 AM/i, '')
+          .replace(/\s+00:00/i, '')
+          .trim();
         console.log('Cleaned date_time field:', formData.date_time);
       }
+      
+      // Debug session length field
+      console.log('Session length field value:', formData.length);
+      console.log('Session length field type:', typeof formData.length);
 
       // Validate the form data
       const { error, value } = fluentFormsSchema.validate(formData);

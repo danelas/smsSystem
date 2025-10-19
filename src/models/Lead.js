@@ -30,6 +30,19 @@ class Lead {
       city, type, date_time, length, location, notes_snippet,
       name, phone, email, exact_address
     ];
+    
+    console.log('Lead creation values:', {
+      city, 
+      service_type: type, 
+      preferred_time_window: date_time, 
+      session_length: length, 
+      location_type: location, 
+      notes_snippet,
+      client_name: name, 
+      client_phone: phone, 
+      client_email: email, 
+      exact_address
+    });
 
     try {
       const result = await pool.query(query, values);

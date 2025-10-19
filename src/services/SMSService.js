@@ -53,9 +53,7 @@ class SMSService {
     // Create a shorter redirect URL
     const shortUrl = `https://smssystem.onrender.com/unlocks/pay/${leadId.substring(0, 8)}`;
     
-    const message = `🔓 Pay $20 to unlock lead: ${shortUrl}
-
-Gold Touch - Lead access fee only.`;
+    const message = `🔓 Pay $20 to unlock lead: ${shortUrl}`;
     
     console.log('Payment SMS length:', message.length);
     console.log('Original Stripe URL length:', paymentUrl.length);
@@ -88,7 +86,7 @@ Gold Touch - Lead access fee only.`;
       }
     }
 
-    return `📋 BOOKING REQUEST AVAILABLE
+    return `📋 GOLD TOUCH CLIENT REQUEST AVAILABLE
 Service: ${leadData.service_type}
 Location: ${leadData.city}
 When: ${timeWindow}
