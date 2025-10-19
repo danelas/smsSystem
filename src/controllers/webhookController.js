@@ -250,13 +250,14 @@ class WebhookController {
       
       if (existingProcessed.rows.length > 0) {
         const existing = existingProcessed.rows[0];
-        if (existing.status === 'PAID' || existing.status === 'REVEALED') {
-          console.log(`Session ${session.id} already processed with status ${existing.status}, ignoring duplicate webhook`);
+        // Check if already processed (either by status or revealed_at timestamp)
+        if (existing.status === 'PAID' || existing.status === 'REVEALED' || existing.revealed_at) {
+          console.log(`⚠️ Session ${session.id} already processed with status ${existing.status}, revealed_at: ${existing.revealed_at}, ignoring duplicate webhook`);
           await pool.query(`
             INSERT INTO unlock_audit_log (
               lead_id, provider_id, event_type, checkout_session_id, notes, created_at
             ) VALUES ($1, $2, 'DUPLICATE_SESSION_WEBHOOK', $3, $4, CURRENT_TIMESTAMP)
-          `, [leadId, providerId, session.id, `Session already processed with status ${existing.status}`]);
+          `, [leadId, providerId, session.id, `Session already processed with status ${existing.status}, revealed_at: ${existing.revealed_at}`]);
           return;
         } else {
           console.log(`Session ${session.id} exists but status is ${existing.status}, continuing processing`);
