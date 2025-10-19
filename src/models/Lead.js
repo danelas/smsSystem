@@ -9,8 +9,13 @@ class Lead {
     } = leadData;
 
     // Extract city and zip from cityzip field
-    const city = cityzip.replace(/\d+/g, '').trim();
+    let city = cityzip.replace(/\d+/g, '').trim();
     const zip_code = cityzip.match(/\d+/) ? cityzip.match(/\d+/)[0] : null;
+    
+    // If no city name (only zip code entered), use zip as city for display
+    if (!city && zip_code) {
+      city = zip_code;
+    }
     
     // Build exact address from available data
     const exact_address = `${cityzip}${location ? `, ${location}` : ''}`;

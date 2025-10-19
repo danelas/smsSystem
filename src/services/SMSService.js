@@ -75,6 +75,8 @@ class SMSService {
   formatTeaserMessage(leadData, leadId) {
     // Debug: Log the leadData being passed to SMS formatter
     console.log('SMS Formatter - leadData received:', JSON.stringify(leadData, null, 2));
+    console.log('City value:', leadData.city);
+    console.log('Service type:', leadData.service_type);
     
     // Format date without time since form only collects date
     // Handle both string dates from forms and Date objects from database
