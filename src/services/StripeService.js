@@ -45,8 +45,8 @@ class StripeService {
           provider_id: providerId.toString(),
           idempotency_key: idempotencyKey,
         },
-        success_url: `https://smssystem.onrender.com/unlocks/success?lead_id=${leadId}&provider_id=${providerId}`,
-        cancel_url: `https://smssystem.onrender.com/unlocks/cancel?lead_id=${leadId}`,
+        success_url: `${process.env.DOMAIN}/unlocks/success?lead_id=${leadId}&provider_id=${providerId}`,
+        cancel_url: `${process.env.DOMAIN}/unlocks/cancel?lead_id=${leadId}`,
         expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
       };
 
@@ -117,7 +117,7 @@ class StripeService {
         after_completion: {
           type: 'redirect',
           redirect: {
-            url: `https://smssystem.onrender.com/unlocks/success?lead_id=${leadId}&provider_id=${providerId}`,
+            url: `${process.env.DOMAIN}/unlocks/success?lead_id=${leadId}&provider_id=${providerId}`,
           },
         },
       }, {

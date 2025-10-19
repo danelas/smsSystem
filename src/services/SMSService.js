@@ -51,7 +51,7 @@ class SMSService {
 
   async sendPaymentLink(providerPhone, paymentUrl, leadId) {
     // Create a shorter redirect URL
-    const shortUrl = `https://smssystem.onrender.com/unlocks/pay/${leadId.substring(0, 8)}`;
+    const shortUrl = `${process.env.DOMAIN}/unlocks/pay/${leadId.substring(0, 8)}`;
     
     const message = `🔓 Pay $20 to unlock lead: ${shortUrl}`;
     

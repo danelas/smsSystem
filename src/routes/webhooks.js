@@ -17,7 +17,7 @@ router.get('/fluentforms', (req, res) => {
   res.json({
     error: 'This endpoint expects POST requests from FluentForms',
     message: 'Configure FluentForms to send POST requests to this URL',
-    correctUrl: 'https://smssystem.onrender.com/webhooks/fluentforms',
+    correctUrl: `${process.env.DOMAIN}/webhooks/fluentforms`,
     method: 'POST'
   });
 });
@@ -34,7 +34,7 @@ router.get('/stripe', (req, res) => {
   res.json({
     message: 'Stripe webhook endpoint is reachable',
     method: 'POST required',
-    url: 'https://smssystem.onrender.com/webhooks/stripe',
+    url: `${process.env.DOMAIN}/webhooks/stripe`,
     instructions: 'Configure this URL in Stripe Dashboard → Webhooks',
     events_to_listen: ['checkout.session.completed'],
     status: 'ready'
@@ -563,7 +563,7 @@ router.get('/setup/database', async (req, res) => {
       providers: allProviders.rows,
       instructions: {
         testWith: 'Use provider_id values: provider1, provider2, or provider3',
-        webhook: 'https://smssystem.onrender.com/webhooks/fluentforms'
+        webhook: `${process.env.DOMAIN}/webhooks/fluentforms`
       }
     });
   } catch (error) {
