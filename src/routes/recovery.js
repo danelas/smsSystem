@@ -157,4 +157,86 @@ router.get('/recent-leads-status', async (req, res) => {
   }
 });
 
+// Manual fix for missed payments (temporary location)
+router.post('/fix-payment', async (req, res) => {
+  try {
+    const { leadId, providerId, checkoutSessionId } = req.body;
+    
+    if (!leadId || !providerId) {
+      return res.status(400).json({
+        success: false,
+        error: 'leadId and providerId are required'
+      });
+    }
+    
+    console.log(`Manual fix for missed payment: ${leadId}, ${providerId}`);
+    
+    // Check if unlock exists
+    const unlockQuery = `SELECT * FROM unlocks WHERE lead_id = $1 AND provider_id = $2`;
+    const unlockResult = await pool.query(unlockQuery, [leadId, providerId]);
+    
+    if (unlockResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Unlock record not found'
+      });
+    }
+    
+    const unlock = unlockResult.rows[0];
+    
+    if (unlock.status !== 'PAYMENT_LINK_SENT') {
+      return res.json({
+        success: false,
+        error: `Cannot fix - current status is ${unlock.status}, expected PAYMENT_LINK_SENT`
+      });
+    }
+    
+    const now = new Date().toISOString();
+    
+    // Update to PAID status
+    const Unlock = require('../models/Unlock');
+    await Unlock.updateStatus(leadId, providerId, 'PAID', {
+      paid_at: now,
+      unlocked_at: now,
+      checkout_session_id: checkoutSessionId || unlock.checkout_session_id
+    });
+    
+    // Get lead and provider details
+    const Lead = require('../models/Lead');
+    const Provider = require('../models/Provider');
+    const SMSService = require('../services/SMSService');
+    
+    const leadDetails = await Lead.getPrivateFields(leadId);
+    const publicDetails = await Lead.getPublicFields(leadId);
+    const provider = await Provider.findById(providerId);
+    
+    if (leadDetails && provider) {
+      // Send reveal SMS
+      await SMSService.sendRevealDetails(provider.phone, leadDetails, publicDetails, leadId);
+      
+      // Update to REVEALED status
+      await Unlock.updateStatus(leadId, providerId, 'REVEALED', {
+        revealed_at: now
+      });
+      
+      console.log(`Successfully revealed lead details to provider ${providerId}`);
+    }
+    
+    res.json({
+      success: true,
+      message: 'Payment issue fixed and lead details sent',
+      provider_phone: provider.phone,
+      client_name: leadDetails.client_name
+    });
+    
+  } catch (error) {
+    console.error('Error fixing missed payment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fix missed payment',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
