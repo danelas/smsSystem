@@ -217,8 +217,17 @@ class WebhookController {
       const providerId = session.metadata.provider_id;
       const now = new Date().toISOString();
 
-      console.log(`🎉 PAYMENT COMPLETED! Processing checkout completion for lead ${leadId}, provider ${providerId}`);
+      console.log(`Checkout session completed for lead ${leadId}, provider ${providerId}`);
       console.log('Session ID:', session.id);
+      console.log('Payment status:', session.payment_status);
+      
+      // CRITICAL: Only process if payment is actually completed
+      if (session.payment_status !== 'paid') {
+        console.log(`⚠️ Payment not completed yet (status: ${session.payment_status}), skipping webhook processing`);
+        return;
+      }
+      
+      console.log(`🎉 PAYMENT CONFIRMED! Processing payment for lead ${leadId}, provider ${providerId}`);
       
       // Check if this exact session has already been processed
       const pool = require('../config/database');
