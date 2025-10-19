@@ -53,7 +53,7 @@ class SMSService {
     // Create a shorter redirect URL
     const shortUrl = `https://smssystem.onrender.com/unlocks/pay/${leadId.substring(0, 8)}`;
     
-    const message = `🔓 Pay $20 to unlock lead: ${shortUrl}`;
+    const message = `🔓 Pay $1 to unlock lead: ${shortUrl}`;
     
     console.log('Payment SMS length:', message.length);
     console.log('Original Stripe URL length:', paymentUrl.length);
@@ -73,9 +73,32 @@ class SMSService {
   }
 
   formatTeaserMessage(leadData, leadId) {
-    const timeWindow = leadData.preferred_time_window ? 
-      moment(leadData.preferred_time_window).format('MMM D, YYYY h:mm A') : 
-      'Flexible';
+    // Debug: Log the leadData being passed to SMS formatter
+    console.log('SMS Formatter - leadData received:', JSON.stringify(leadData, null, 2));
+    
+    // Format date without time since form only collects date
+    // FluentForms sends dates in m.d.Y format (e.g., "10.19.2025")
+    let timeWindow = 'Flexible';
+    if (leadData.preferred_time_window) {
+      // Try to parse different date formats from FluentForms
+      let parsedDate;
+      if (leadData.preferred_time_window.includes('.')) {
+        // Handle m.d.Y format (10.19.2025)
+        parsedDate = moment(leadData.preferred_time_window, 'M.D.YYYY');
+      } else if (leadData.preferred_time_window.includes('/')) {
+        // Handle m/d/Y format (10/19/2025)
+        parsedDate = moment(leadData.preferred_time_window, 'M/D/YYYY');
+      } else {
+        // Fallback to default parsing
+        parsedDate = moment(leadData.preferred_time_window);
+      }
+      
+      if (parsedDate.isValid()) {
+        timeWindow = parsedDate.format('MMM D, YYYY');
+      } else {
+        timeWindow = leadData.preferred_time_window; // Use as-is if parsing fails
+      }
+    }
 
     // Show contact preference info if available
     let contactInfo = '';
@@ -92,7 +115,7 @@ Location: ${leadData.city}
 When: ${timeWindow}
 Session: ${leadData.session_length || leadData.length || 'Not specified'}
 ${contactInfo ? contactInfo + '\n' : ''}
-💰 Unlock full contact details for $20
+💰 Unlock full contact details for $1
 Reply Y to proceed, N to pass
 
 Gold Touch provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;

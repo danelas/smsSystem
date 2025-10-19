@@ -164,6 +164,7 @@ process.on('SIGTERM', async () => {
 app.listen(PORT, () => {
   console.log(`Gold Touch Lead Unlock System running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Crypto module loaded: ${typeof require('crypto')}`);
   
   // Start the lead scheduler
   LeadScheduler.startScheduler();
