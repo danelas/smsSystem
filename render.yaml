@@ -35,7 +35,7 @@ services:
       - key: WEBHOOK_SECRET
         generateValue: true
       - key: DOMAIN
-        value: https://smssystem.onrender.com
+        value: https://pay.goldtouchmobile.com
 
 databases:
   - name: providers-db
