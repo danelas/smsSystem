@@ -2,6 +2,61 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 
+// Store recent logs in memory for easy access
+const recentLogs = [];
+const MAX_LOGS = 1000;
+
+// Log storage function
+function addLog(level, message, meta = {}) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    level,
+    message,
+    meta
+  };
+  
+  recentLogs.unshift(logEntry);
+  if (recentLogs.length > MAX_LOGS) {
+    recentLogs.pop();
+  }
+  
+  // Also log to console
+  console.log(`[${logEntry.timestamp}] ${level.toUpperCase()}: ${message}`, meta);
+}
+
+// Expose log function globally
+global.systemLog = addLog;
+
+// Get recent logs endpoint
+router.get('/logs', (req, res) => {
+  const { level, limit = 100, search } = req.query;
+  
+  let filteredLogs = recentLogs;
+  
+  // Filter by level
+  if (level) {
+    filteredLogs = filteredLogs.filter(log => log.level === level);
+  }
+  
+  // Search in message
+  if (search) {
+    filteredLogs = filteredLogs.filter(log => 
+      log.message.toLowerCase().includes(search.toLowerCase()) ||
+      JSON.stringify(log.meta).toLowerCase().includes(search.toLowerCase())
+    );
+  }
+  
+  // Limit results
+  filteredLogs = filteredLogs.slice(0, parseInt(limit));
+  
+  res.json({
+    success: true,
+    total_logs: recentLogs.length,
+    filtered_count: filteredLogs.length,
+    logs: filteredLogs
+  });
+});
+
 // Investigate payment issues for a specific provider
 router.get('/payment-issue/:providerId', async (req, res) => {
   try {
@@ -177,6 +232,119 @@ router.get('/unlock-details/:leadId/:providerId', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get unlock details'
+    });
+  }
+});
+
+// Manual fix for missed payments
+router.post('/fix-missed-payment', async (req, res) => {
+  try {
+    const { leadId, providerId, checkoutSessionId } = req.body;
+    
+    if (!leadId || !providerId) {
+      return res.status(400).json({
+        success: false,
+        error: 'leadId and providerId are required'
+      });
+    }
+    
+    console.log(`Manual fix for missed payment: ${leadId}, ${providerId}`);
+    
+    // Check if unlock exists and is in PAYMENT_LINK_SENT status
+    const unlockQuery = `
+      SELECT * FROM unlocks 
+      WHERE lead_id = $1 AND provider_id = $2
+    `;
+    const unlockResult = await pool.query(unlockQuery, [leadId, providerId]);
+    
+    if (unlockResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Unlock record not found'
+      });
+    }
+    
+    const unlock = unlockResult.rows[0];
+    
+    if (unlock.status !== 'PAYMENT_LINK_SENT') {
+      return res.json({
+        success: false,
+        error: `Cannot fix - current status is ${unlock.status}, expected PAYMENT_LINK_SENT`
+      });
+    }
+    
+    // Verify payment with Stripe if session ID provided
+    let stripeVerified = false;
+    if (checkoutSessionId) {
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const session = await stripe.checkout.sessions.retrieve(checkoutSessionId);
+        
+        if (session.payment_status === 'paid') {
+          stripeVerified = true;
+          console.log('Stripe payment verified:', session.payment_status);
+        }
+      } catch (stripeError) {
+        console.error('Stripe verification failed:', stripeError.message);
+      }
+    }
+    
+    const now = new Date().toISOString();
+    
+    // Update to PAID status
+    const Unlock = require('../models/Unlock');
+    await Unlock.updateStatus(leadId, providerId, 'PAID', {
+      paid_at: now,
+      unlocked_at: now,
+      checkout_session_id: checkoutSessionId || unlock.checkout_session_id
+    });
+    
+    // Get lead and provider details
+    const Lead = require('../models/Lead');
+    const Provider = require('../models/Provider');
+    const SMSService = require('../services/SMSService');
+    
+    const leadDetails = await Lead.getPrivateFields(leadId);
+    const publicDetails = await Lead.getPublicFields(leadId);
+    const provider = await Provider.findById(providerId);
+    
+    if (leadDetails && provider) {
+      // Send reveal SMS
+      await SMSService.sendRevealDetails(provider.phone, leadDetails, publicDetails, leadId);
+      
+      // Update to REVEALED status
+      await Unlock.updateStatus(leadId, providerId, 'REVEALED', {
+        revealed_at: now
+      });
+      
+      console.log(`Successfully revealed lead details to provider ${providerId}`);
+    }
+    
+    // Log the manual fix
+    try {
+      await pool.query(`
+        INSERT INTO unlock_audit_log (
+          lead_id, provider_id, event_type, checkout_session_id, notes, created_at
+        ) VALUES ($1, $2, 'MANUAL_FIX', $3, $4, CURRENT_TIMESTAMP)
+      `, [leadId, providerId, checkoutSessionId, `Manual fix applied - payment verified: ${stripeVerified}`]);
+    } catch (auditError) {
+      console.log('Could not log to audit table:', auditError.message);
+    }
+    
+    res.json({
+      success: true,
+      message: 'Payment issue fixed and lead details sent',
+      stripe_verified: stripeVerified,
+      provider_phone: provider.phone,
+      client_name: leadDetails.client_name
+    });
+    
+  } catch (error) {
+    console.error('Error fixing missed payment:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fix missed payment',
+      details: error.message
     });
   }
 });
