@@ -7,7 +7,7 @@ services:
     buildCommand: npm ci
     startCommand: npm start
     runtime: node
-    runtimeVersion: 20.x
+    runtimeVersion: 20.18.1
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

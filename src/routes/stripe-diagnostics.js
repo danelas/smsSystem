@@ -67,7 +67,16 @@ router.get('/', (req, res) => {
     // Test 3: Check Stripe module
     try {
       const stripe = require('stripe');
-      const stripeVersion = require('stripe/package.json').version;
+      
+      // Try to get version safely
+      let stripeVersion = 'unknown';
+      try {
+        const stripePkg = require('stripe/package.json');
+        stripeVersion = stripePkg.version;
+      } catch (versionError) {
+        // If package.json can't be read due to exports, that's okay
+        stripeVersion = 'installed (version check blocked by exports)';
+      }
       
       diagnostics.stripe_info = {
         module_loaded: true,
