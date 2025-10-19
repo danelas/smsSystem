@@ -57,6 +57,17 @@ router.get('/logs', (req, res) => {
   });
 });
 
+// Test webhook connectivity
+router.get('/test-webhook', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Webhook endpoint is reachable',
+    timestamp: new Date().toISOString(),
+    server_time: new Date().toLocaleString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Investigate payment issues for a specific provider
 router.get('/payment-issue/:providerId', async (req, res) => {
   try {
