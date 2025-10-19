@@ -176,6 +176,10 @@ Contact the client directly. Good luck! 🍀`;
     // Normalize message for lead responses: uppercase and trim spaces
     const message = originalMessage.toUpperCase();
     
+    // Log the exact character codes for debugging
+    console.log('Received message:', message);
+    console.log('Character codes:', Array.from(message).map(c => c.charCodeAt(0)).join(', '));
+    
     try {
       // Handle STOP requests
       if (message === 'STOP') {
@@ -242,7 +246,9 @@ Contact the client directly. Good luck! 🍀`;
 
       // Handle responses based on current status and normalized message
       if (unlock.status === 'TEASER_SENT' || unlock.status === 'AWAIT_CONFIRM' || unlock.status === 'NEW_LEAD' || unlock.status === 'PAYMENT_LINK_SENT') {
-        if (message === 'Y' || message === 'YES') {
+        // Accept Y, YES, and similar looking characters (Greek Upsilon Υ, etc.)
+        const isYes = message === 'Y' || message === 'YES' || message === 'Υ' || message === 'YE' || /^[YΥ]$/i.test(message);
+        if (isYes) {
           // Record Y received timestamp
           const now = new Date().toISOString();
           await Unlock.updateStatus(leadId, providerId, 'AWAIT_CONFIRM', {
