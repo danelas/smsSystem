@@ -77,26 +77,32 @@ class SMSService {
     console.log('SMS Formatter - leadData received:', JSON.stringify(leadData, null, 2));
     
     // Format date without time since form only collects date
-    // FluentForms sends dates in m.d.Y format (e.g., "10.19.2025")
+    // Handle both string dates from forms and Date objects from database
     let timeWindow = 'Flexible';
     if (leadData.preferred_time_window) {
-      // Try to parse different date formats from FluentForms
       let parsedDate;
-      if (leadData.preferred_time_window.includes('.')) {
+      
+      // Convert to string if it's a Date object
+      const dateValue = typeof leadData.preferred_time_window === 'string' 
+        ? leadData.preferred_time_window 
+        : leadData.preferred_time_window.toString();
+      
+      // Try to parse different date formats
+      if (dateValue.includes('.')) {
         // Handle m.d.Y format (10.19.2025)
-        parsedDate = moment(leadData.preferred_time_window, 'M.D.YYYY');
-      } else if (leadData.preferred_time_window.includes('/')) {
+        parsedDate = moment(dateValue, 'M.D.YYYY');
+      } else if (dateValue.includes('/')) {
         // Handle m/d/Y format (10/19/2025)
-        parsedDate = moment(leadData.preferred_time_window, 'M/D/YYYY');
+        parsedDate = moment(dateValue, 'M/D/YYYY');
       } else {
-        // Fallback to default parsing
+        // Fallback to default parsing (handles ISO dates from database)
         parsedDate = moment(leadData.preferred_time_window);
       }
       
       if (parsedDate.isValid()) {
         timeWindow = parsedDate.format('MMM D, YYYY');
       } else {
-        timeWindow = leadData.preferred_time_window; // Use as-is if parsing fails
+        timeWindow = dateValue; // Use as-is if parsing fails
       }
     }
 
