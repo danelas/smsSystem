@@ -35,7 +35,7 @@ class StripeService {
                 name: 'Lead Contact Details Access',
                 description: 'Unlock full client contact information for this lead',
               },
-              unit_amount: 2000, // $20.00 in cents
+              unit_amount: 100, // $1.00 in cents
             },
             quantity: 1,
           },
@@ -104,7 +104,7 @@ class StripeService {
                 name: 'Lead Contact Details Access',
                 description: 'Unlock full client contact information for this lead',
               },
-              unit_amount: 2000, // $20.00 in cents
+              unit_amount: 100, // $1.00 in cents
             },
             quantity: 1,
           },
@@ -164,7 +164,7 @@ class StripeService {
   }
 
   static getPrice() {
-    return 2000; // $20.00 in cents
+    return 100; // $1.00 in cents
   }
 }
 
