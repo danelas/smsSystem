@@ -71,6 +71,8 @@ class Lead {
         city,
         service_type,
         preferred_time_window,
+        session_length,
+        location_type,
         budget_range,
         notes_snippet,
         created_at,
