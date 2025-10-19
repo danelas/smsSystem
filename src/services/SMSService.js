@@ -53,7 +53,7 @@ class SMSService {
     // Create a shorter redirect URL
     const shortUrl = `https://smssystem.onrender.com/unlocks/pay/${leadId.substring(0, 8)}`;
     
-    const message = `🔓 Pay $1 to unlock lead: ${shortUrl}`;
+    const message = `🔓 Pay $20 to unlock lead: ${shortUrl}`;
     
     console.log('Payment SMS length:', message.length);
     console.log('Original Stripe URL length:', paymentUrl.length);
@@ -121,7 +121,7 @@ Location: ${leadData.city}
 When: ${timeWindow}
 Session: ${leadData.session_length || leadData.length || 'Not specified'}
 ${contactInfo ? contactInfo + '\n' : ''}
-💰 Unlock full contact details for $1
+💰 Unlock full contact details for $20
 Reply Y to proceed, N to pass
 
 Gold Touch provides advertising access to client inquiries. We do not arrange or guarantee appointments.`;
