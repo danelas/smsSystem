@@ -128,16 +128,25 @@ Gold Touch provides advertising access to client inquiries. We do not arrange or
   }
 
   formatRevealMessage(privateDetails, publicDetails, leadId) {
+    // Format date without time (same as teaser message)
+    let timeWindow = 'Flexible';
+    if (publicDetails.preferred_time_window) {
+      const parsedDate = moment(publicDetails.preferred_time_window);
+      if (parsedDate.isValid()) {
+        timeWindow = parsedDate.format('MMM D, YYYY');
+      }
+    }
+
     return `🔓 Client Request Unlocked
 
 👤 Client: ${privateDetails.client_name}
 📞 Phone: ${privateDetails.client_phone}
 📧 Email: ${privateDetails.client_email || 'Not provided'}
-📍 Address: ${privateDetails.exact_address || `${privateDetails.city}, ${privateDetails.zip_code || ''}`}
+📍 Address: ${privateDetails.exact_address || `${privateDetails.city}, ${publicDetails.zip_code || ''}`}
 💬 Contact Pref: ${publicDetails.contactpref || 'Not specified'}
 
 Service: ${publicDetails.service_type}
-When: ${publicDetails.preferred_time_window ? moment(publicDetails.preferred_time_window).format('MMM D, YYYY h:mm A') : 'Flexible'}
+When: ${timeWindow}
 
 Contact the client directly. Good luck! 🍀`;
   }
