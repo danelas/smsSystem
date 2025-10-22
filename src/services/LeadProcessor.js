@@ -139,7 +139,40 @@ class LeadProcessor {
 
       const now = new Date().toISOString();
 
-      // Send teaser SMS
+      // Check if this is provider's first lead (FREE!)
+      console.log(`🔍 Checking if this is first lead for provider ${providerId}...`);
+      const hasUsedFirstLead = await Provider.hasUsedFirstLead(providerId);
+      console.log(`Provider ${providerId} hasUsedFirstLead:`, hasUsedFirstLead);
+
+      if (!hasUsedFirstLead) {
+        console.log(`🎁 FIRST LEAD for provider ${providerId} - sending FREE with full details!`);
+        
+        // Get full lead details
+        const Lead = require('../models/Lead');
+        const publicDetails = await Lead.getPublicFields(leadId);
+        const privateDetails = await Lead.getPrivateFields(leadId);
+        
+        // Send special first lead message with full details
+        await SMSService.sendFirstLeadFree(provider.phone, privateDetails, publicDetails, leadId);
+        
+        // Mark as revealed and paid immediately
+        await Unlock.updateStatus(leadId, providerId, 'REVEALED', {
+          revealed_at: now,
+          paid_at: now,
+          unlocked_at: now,
+          teaser_sent_at: now,
+          last_sent_at: now
+        });
+        
+        // Mark provider's first lead as used
+        await Provider.markFirstLeadUsed(providerId);
+        
+        console.log(`✅ First lead sent FREE to provider ${providerId} for lead ${leadId}`);
+        return; // Exit early - no teaser needed
+      }
+
+      // Normal flow - send teaser SMS
+      console.log(`Sending regular teaser to provider ${providerId}`);
       await SMSService.sendTeaserMessage(provider.phone, leadData, leadId);
 
       // Update unlock status with audit trail

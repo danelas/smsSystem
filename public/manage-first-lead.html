@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage First Lead Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats h2 {
+            margin-top: 0;
+        }
+        .stat-item {
+            display: inline-block;
+            margin-right: 30px;
+            font-size: 18px;
+        }
+        .stat-number {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 24px;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .status-true {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .status-false {
+            color: #28a745;
+            font-weight: bold;
+        }
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-toggle {
+            background: #007bff;
+            color: white;
+        }
+        .btn-toggle:hover {
+            background: #0056b3;
+        }
+        .btn-refresh {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .btn-refresh:hover {
+            background: #218838;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎁 First Lead Management</h1>
+    
+    <button class="btn-refresh" onclick="loadProviders()">🔄 Refresh Data</button>
+    
+    <div class="stats" id="stats">
+        <h2>Statistics</h2>
+        <div class="stat-item">
+            <div class="stat-number" id="total">-</div>
+            <div>Total Providers</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #28a745;" id="eligible">-</div>
+            <div>Eligible for Free Lead</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" style="color: #dc3545;" id="used">-</div>
+            <div>Already Used</div>
+        </div>
+    </div>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div id="loading" class="loading">Loading providers...</div>
+    
+    <table id="providersTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>Provider ID</th>
+                <th>Name</th>
+                <th>First Lead Used?</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="providersBody">
+        </tbody>
+    </table>
+
+    <script>
+        async function loadProviders() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('providersTable').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            try {
+                const response = await fetch('/webhooks/check-first-lead-status');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load providers');
+                }
+                
+                // Update stats
+                document.getElementById('total').textContent = data.stats.total;
+                document.getElementById('eligible').textContent = data.stats.eligible_for_free;
+                document.getElementById('used').textContent = data.stats.already_used;
+                
+                // Update table
+                const tbody = document.getElementById('providersBody');
+                tbody.innerHTML = '';
+                
+                data.providers.forEach(provider => {
+                    const row = document.createElement('tr');
+                    const usedStatus = provider.first_lead_used;
+                    const statusClass = usedStatus ? 'status-true' : 'status-false';
+                    const statusText = usedStatus ? 'YES (Already Used)' : 'NO (Eligible for Free)';
+                    const buttonText = usedStatus ? 'Set to FALSE' : 'Set to TRUE';
+                    const createdDate = new Date(provider.created_at).toLocaleDateString();
+                    
+                    row.innerHTML = `
+                        <td><strong>${provider.id}</strong></td>
+                        <td>${provider.name || 'N/A'}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <button class="btn-toggle" onclick="toggleProvider('${provider.id}', ${!usedStatus})">
+                                ${buttonText}
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('providersTable').style.display = 'table';
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        async function toggleProvider(providerId, newValue) {
+            try {
+                const endpoint = newValue 
+                    ? `/webhooks/set-first-lead-used`
+                    : `/webhooks/reset-first-lead/${providerId}`;
+                
+                let response;
+                if (newValue) {
+                    response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ providerIds: [providerId] })
+                    });
+                } else {
+                    response = await fetch(endpoint);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload the table
+                    loadProviders();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to update'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Load on page load
+        loadProviders();
+    </script>
+</body>
+</html>
