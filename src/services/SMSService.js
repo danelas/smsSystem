@@ -298,7 +298,9 @@ Future leads are $20 to unlock. Reply Y when you see opportunities you want!`;
           }
 
           // Check if this is provider's first lead (FREE!)
+          console.log(`🔍 Checking first lead status for provider ${providerId}...`);
           const hasUsedFirstLead = await Provider.hasUsedFirstLead(providerId);
+          console.log(`Provider ${providerId} hasUsedFirstLead:`, hasUsedFirstLead);
           
           if (!hasUsedFirstLead) {
             console.log(`🎁 First lead for provider ${providerId} - sending FREE!`);

@@ -229,10 +229,21 @@ class Provider {
     const query = 'SELECT first_lead_used FROM providers WHERE id = $1';
     
     try {
+      console.log(`Querying first_lead_used for provider: ${providerId}`);
       const result = await pool.query(query, [providerId]);
-      return result.rows[0]?.first_lead_used || false;
+      console.log(`Query result:`, result.rows[0]);
+      
+      if (!result.rows[0]) {
+        console.log(`⚠️ Provider ${providerId} not found in database`);
+        return true; // Provider doesn't exist, treat as already used
+      }
+      
+      const hasUsed = result.rows[0].first_lead_used || false;
+      console.log(`Provider ${providerId} first_lead_used value:`, hasUsed);
+      return hasUsed;
     } catch (error) {
-      console.error('Error checking first lead status:', error);
+      console.error('❌ Error checking first lead status:', error);
+      console.error('Error details:', error.message);
       return true; // Default to true (already used) on error to be safe
     }
   }
