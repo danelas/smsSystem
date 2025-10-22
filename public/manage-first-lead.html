@@ -197,10 +197,18 @@
         }
         
         async function toggleProvider(providerId, newValue) {
+            console.log('Toggle clicked:', providerId, 'newValue:', newValue);
+            
+            if (!confirm(`Set ${providerId} first_lead_used to ${newValue}?`)) {
+                return;
+            }
+            
             try {
                 const endpoint = newValue 
                     ? `/webhooks/set-first-lead-used`
                     : `/webhooks/reset-first-lead/${providerId}`;
+                
+                console.log('Calling endpoint:', endpoint);
                 
                 let response;
                 if (newValue) {
@@ -213,16 +221,20 @@
                     response = await fetch(endpoint);
                 }
                 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (data.success) {
+                    alert('✅ Updated successfully!');
                     // Reload the table
                     loadProviders();
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to update'));
+                    alert('❌ Error: ' + (data.error || 'Failed to update'));
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                console.error('Toggle error:', error);
+                alert('❌ Error: ' + error.message);
             }
         }
         

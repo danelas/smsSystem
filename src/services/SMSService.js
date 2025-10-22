@@ -165,7 +165,7 @@ Contact the client directly. Good luck! 🍀`;
 
     return `🎁 FIRST CLIENT REQUEST - ON US!
 
-Welcome to Gold Touch! Your first lead is FREE as our gift to you.
+Welcome to Gold Touch! Your first client request is FREE as our gift to you.
 
 👤 Client: ${privateDetails.client_name}
 📞 Phone: ${privateDetails.client_phone}
@@ -178,7 +178,7 @@ When: ${timeWindow}
 
 Contact the client directly. Good luck! 🍀
 
-Future leads are $20 to unlock. Reply Y when you see opportunities you want!`;
+Future client requests are $20 to unlock. Reply Y when you see opportunities you want!`;
   }
 
   async sendFirstLeadFree(providerPhone, privateDetails, publicDetails, leadId) {
