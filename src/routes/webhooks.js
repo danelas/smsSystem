@@ -3,6 +3,7 @@ const router = express.Router();
 const crypto = require('crypto'); // Ensure crypto is available
 const WebhookController = require('../controllers/webhookController');
 const LeadProcessor = require('../services/LeadProcessor');
+const migration = require('../migrations/001_add_first_lead_flag');
 
 // FluentForms webhook endpoint
 router.post('/fluentforms', express.json(), WebhookController.handleFluentFormsWebhook);
@@ -571,6 +572,28 @@ router.get('/setup/database', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Database setup failed',
+      details: error.message
+    });
+  }
+});
+
+// One-time migration endpoint to add first_lead_used column
+router.get('/run-migration-first-lead', async (req, res) => {
+  try {
+    console.log('🔄 Running first lead migration...');
+    await migration.up();
+    
+    res.json({
+      success: true,
+      message: '✅ Migration completed successfully!',
+      migration: 'add_first_lead_used_column',
+      note: 'All providers are now eligible for their first free lead'
+    });
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Migration failed',
       details: error.message
     });
   }
