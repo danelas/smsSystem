@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Providers - Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover { background: #f8f9fa; }
+        .status-true { color: #dc3545; font-weight: bold; }
+        .status-false { color: #28a745; font-weight: bold; }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            padding: 5px 10px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 2px;
+        }
+        a:hover {
+            background: #007bff;
+            color: white;
+        }
+        .btn-refresh {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-refresh:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <h1>🎁 First Lead Management (Simple)</h1>
+    
+    <button class="btn-refresh" onclick="location.reload()">🔄 Refresh</button>
+    
+    <div class="stats" id="stats"></div>
+    
+    <table id="providersTable">
+        <thead>
+            <tr>
+                <th>Provider ID</th>
+                <th>Name</th>
+                <th>First Lead Used?</th>
+                <th>Actions (Click Links)</th>
+            </tr>
+        </thead>
+        <tbody id="providersBody">
+            <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function loadProviders() {
+            try {
+                const response = await fetch('/webhooks/check-first-lead-status');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load');
+                }
+                
+                // Update stats
+                document.getElementById('stats').innerHTML = `
+                    <h2>Statistics</h2>
+                    <p><strong>Total:</strong> ${data.stats.total} | 
+                    <strong style="color: #28a745;">Eligible for Free:</strong> ${data.stats.eligible_for_free} | 
+                    <strong style="color: #dc3545;">Already Used:</strong> ${data.stats.already_used}</p>
+                `;
+                
+                // Update table
+                const tbody = document.getElementById('providersBody');
+                tbody.innerHTML = '';
+                
+                data.providers.forEach(provider => {
+                    const row = document.createElement('tr');
+                    const usedStatus = provider.first_lead_used;
+                    const statusClass = usedStatus ? 'status-true' : 'status-false';
+                    const statusText = usedStatus ? 'YES (Already Used)' : 'NO (Eligible for Free)';
+                    
+                    row.innerHTML = `
+                        <td><strong>${provider.id}</strong></td>
+                        <td>${provider.name || 'N/A'}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                        <td>
+                            <a href="/webhooks/reset-first-lead/${provider.id}" target="_blank">Set to FALSE</a>
+                            <a href="/webhooks/set-first-lead-used" 
+                               onclick="return confirm('This requires POST. Use button in other page or direct URL.')" 
+                               target="_blank">Set to TRUE (use API)</a>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                document.getElementById('providersBody').innerHTML = 
+                    `<tr><td colspan="4" style="color: red;">Error: ${error.message}</td></tr>`;
+            }
+        }
+        
+        loadProviders();
+    </script>
+</body>
+</html>

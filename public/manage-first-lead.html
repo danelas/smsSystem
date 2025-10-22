@@ -172,6 +172,10 @@
                     const buttonText = usedStatus ? 'Set to FALSE' : 'Set to TRUE';
                     const createdDate = new Date(provider.created_at).toLocaleDateString();
                     
+                    const toggleUrl = usedStatus 
+                        ? `/webhooks/reset-first-lead/${provider.id}`
+                        : `/webhooks/set-first-lead-used`;
+                    
                     row.innerHTML = `
                         <td><strong>${provider.id}</strong></td>
                         <td>${provider.name || 'N/A'}</td>
@@ -181,6 +185,7 @@
                             <button class="btn-toggle" onclick="toggleProvider('${provider.id}', ${!usedStatus})">
                                 ${buttonText}
                             </button>
+                            <br><small><a href="${toggleUrl}" target="_blank" style="color: #666;">Direct link</a></small>
                         </td>
                     `;
                     tbody.appendChild(row);
