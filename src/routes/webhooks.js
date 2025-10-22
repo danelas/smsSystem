@@ -599,4 +599,35 @@ router.get('/run-migration-first-lead', async (req, res) => {
   }
 });
 
+// Reset first_lead_used for a specific provider (for testing)
+router.get('/reset-first-lead/:providerId', async (req, res) => {
+  try {
+    const { providerId } = req.params;
+    const pool = require('../config/database');
+    
+    await pool.query(
+      'UPDATE providers SET first_lead_used = FALSE WHERE id = $1',
+      [providerId]
+    );
+    
+    const result = await pool.query(
+      'SELECT id, name, first_lead_used FROM providers WHERE id = $1',
+      [providerId]
+    );
+    
+    res.json({
+      success: true,
+      message: `✅ Reset first_lead_used for ${providerId}`,
+      provider: result.rows[0]
+    });
+  } catch (error) {
+    console.error('❌ Reset failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Reset failed',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
