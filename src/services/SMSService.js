@@ -206,6 +206,10 @@ Future leads are $20 to unlock. Reply Y when you see opportunities you want!`;
     const StripeService = require('./StripeService');
     const ProviderSupportService = require('./ProviderSupportService');
     
+    console.log('🔔 SMS RECEIVED - Processing incoming message');
+    console.log('From:', phoneNumber);
+    console.log('Message body:', messageBody);
+    
     // Keep original message for AI processing
     const originalMessage = messageBody.trim();
     // Normalize message for lead responses: uppercase and trim spaces
