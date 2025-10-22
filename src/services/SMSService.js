@@ -163,22 +163,21 @@ Contact the client directly. Good luck! 🍀`;
       }
     }
 
-    return `🎁 FIRST CLIENT REQUEST - ON US!
+    return `🎁 FIRST REQUEST - FREE!
 
-Welcome to Gold Touch! Your first client request is FREE as our gift to you.
+Welcome! This one's on us.
 
-👤 Client: ${privateDetails.client_name}
-📞 Phone: ${privateDetails.client_phone}
-📧 Email: ${privateDetails.client_email || 'Not provided'}
-📍 Address: ${privateDetails.exact_address || `${privateDetails.city}, ${publicDetails.zip_code || ''}`}
-💬 Contact Pref: ${publicDetails.contactpref || 'Not specified'}
+👤 ${privateDetails.client_name}
+📞 ${privateDetails.client_phone}
+📧 ${privateDetails.client_email || 'Not provided'}
+📍 ${privateDetails.exact_address || `${privateDetails.city}, ${publicDetails.zip_code || ''}`}
 
-Service: ${publicDetails.service_type}
-When: ${timeWindow}
+${publicDetails.service_type} - ${timeWindow}
+Contact: ${publicDetails.contactpref || 'Any'}
 
-Contact the client directly. Good luck! 🍀
+Call them now. Good luck! 🍀
 
-Future client requests are $20 to unlock. Reply Y when you see opportunities you want!`;
+Future requests $20. Reply Y to unlock.`;
   }
 
   async sendFirstLeadFree(providerPhone, privateDetails, publicDetails, leadId) {
