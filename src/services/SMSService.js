@@ -163,19 +163,19 @@ Contact the client directly. Good luck! 🍀`;
       }
     }
 
-    return `🎁 FIRST REQUEST - FREE!
+    return `FIRST REQUEST - FREE!
 
 Welcome! This one's on us.
 
-👤 ${privateDetails.client_name}
-📞 ${privateDetails.client_phone}
-📧 ${privateDetails.client_email || 'Not provided'}
-📍 ${privateDetails.exact_address || `${privateDetails.city}, ${publicDetails.zip_code || ''}`}
+Client: ${privateDetails.client_name}
+Phone: ${privateDetails.client_phone}
+Email: ${privateDetails.client_email || 'Not provided'}
+Address: ${privateDetails.exact_address || `${privateDetails.city}, ${publicDetails.zip_code || ''}`}
 
 ${publicDetails.service_type} - ${timeWindow}
 Contact: ${publicDetails.contactpref || 'Any'}
 
-Call them now. Good luck! 🍀
+Call them now. Good luck!
 
 Future requests $20. Reply Y to unlock.`;
   }
@@ -300,36 +300,7 @@ Future requests $20. Reply Y to unlock.`;
             return { action: 'lead_closed' };
           }
 
-          // Check if this is provider's first lead (FREE!)
-          console.log(`🔍 Checking first lead status for provider ${providerId}...`);
-          const hasUsedFirstLead = await Provider.hasUsedFirstLead(providerId);
-          console.log(`Provider ${providerId} hasUsedFirstLead:`, hasUsedFirstLead);
-          
-          if (!hasUsedFirstLead) {
-            console.log(`🎁 First lead for provider ${providerId} - sending FREE!`);
-            
-            // Get full lead details
-            const Lead = require('../models/Lead');
-            const publicDetails = await Lead.getPublicFields(leadId);
-            const privateDetails = await Lead.getPrivateFields(leadId);
-            
-            // Send special first lead message with full details
-            await this.sendFirstLeadFree(phoneNumber, privateDetails, publicDetails, leadId);
-            
-            // Mark as revealed and paid
-            await Unlock.updateStatus(leadId, providerId, 'REVEALED', {
-              revealed_at: now,
-              paid_at: now,
-              unlocked_at: now
-            });
-            
-            // Mark provider's first lead as used
-            await Provider.markFirstLeadUsed(providerId);
-            
-            return { action: 'first_lead_free', isFree: true };
-          }
-
-          // Normal flow - create payment link
+          // Create payment link (first lead check already happened when teaser was sent)
           console.log('Creating payment link for lead:', leadId, 'provider:', providerId);
           console.log('Current unlock status:', unlock.status);
           console.log('Existing payment link URL:', unlock.payment_link_url);
