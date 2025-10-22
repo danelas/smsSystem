@@ -139,12 +139,22 @@ class LeadProcessor {
 
       const now = new Date().toISOString();
 
-      // Check if this is provider's first lead (FREE!)
+      // Check if this is provider's first lead (FREE!) with atomic update to prevent race conditions
       console.log(`🔍 Checking if this is first lead for provider ${providerId}...`);
-      const hasUsedFirstLead = await Provider.hasUsedFirstLead(providerId);
-      console.log(`Provider ${providerId} hasUsedFirstLead:`, hasUsedFirstLead);
+      
+      // Try to atomically claim the first lead (returns true if we successfully claimed it)
+      const pool = require('../config/database');
+      const claimResult = await pool.query(`
+        UPDATE providers 
+        SET first_lead_used = TRUE, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1 AND first_lead_used = FALSE
+        RETURNING id
+      `, [providerId]);
+      
+      const isFirstLead = claimResult.rows.length > 0;
+      console.log(`Provider ${providerId} first lead claim result:`, isFirstLead);
 
-      if (!hasUsedFirstLead) {
+      if (isFirstLead) {
         console.log(`🎁 FIRST LEAD for provider ${providerId} - sending FREE with full details!`);
         
         // Get full lead details
@@ -163,9 +173,6 @@ class LeadProcessor {
           teaser_sent_at: now,
           last_sent_at: now
         });
-        
-        // Mark provider's first lead as used
-        await Provider.markFirstLeadUsed(providerId);
         
         console.log(`✅ First lead sent FREE to provider ${providerId} for lead ${leadId}`);
         return; // Exit early - no teaser needed
