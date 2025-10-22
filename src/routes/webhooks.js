@@ -630,4 +630,147 @@ router.get('/reset-first-lead/:providerId', async (req, res) => {
   }
 });
 
+// Check all providers' first_lead_used status
+router.get('/check-first-lead-status', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    
+    const result = await pool.query(`
+      SELECT id, name, first_lead_used, created_at
+      FROM providers 
+      ORDER BY id
+    `);
+    
+    const stats = {
+      total: result.rows.length,
+      eligible_for_free: result.rows.filter(p => !p.first_lead_used).length,
+      already_used: result.rows.filter(p => p.first_lead_used).length
+    };
+    
+    res.json({
+      success: true,
+      stats,
+      providers: result.rows
+    });
+  } catch (error) {
+    console.error('❌ Check failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Check failed',
+      details: error.message
+    });
+  }
+});
+
+// Set specific providers to have used their first lead (POST)
+router.post('/set-first-lead-used', express.json(), async (req, res) => {
+  try {
+    const { providerIds } = req.body; // Array of provider IDs
+    const pool = require('../config/database');
+    
+    if (!Array.isArray(providerIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'providerIds must be an array'
+      });
+    }
+    
+    // Set to TRUE for specified providers
+    await pool.query(
+      'UPDATE providers SET first_lead_used = TRUE WHERE id = ANY($1)',
+      [providerIds]
+    );
+    
+    // Get updated providers
+    const result = await pool.query(
+      'SELECT id, name, first_lead_used FROM providers WHERE id = ANY($1) ORDER BY id',
+      [providerIds]
+    );
+    
+    res.json({
+      success: true,
+      message: `✅ Set first_lead_used = TRUE for ${providerIds.length} providers`,
+      updated: result.rows
+    });
+  } catch (error) {
+    console.error('❌ Update failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Update failed',
+      details: error.message
+    });
+  }
+});
+
+// Set specific providers to TRUE via GET (for easy browser testing)
+router.get('/set-used-true', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const providerIds = ['provider14', 'provider91', 'provider50', 'provider32', 'provider47', 'provider46'];
+    
+    // Set to TRUE for specified providers
+    await pool.query(
+      'UPDATE providers SET first_lead_used = TRUE WHERE id = ANY($1)',
+      [providerIds]
+    );
+    
+    // Get updated providers
+    const result = await pool.query(
+      'SELECT id, name, first_lead_used FROM providers WHERE id = ANY($1) ORDER BY id',
+      [providerIds]
+    );
+    
+    res.json({
+      success: true,
+      message: `✅ Set first_lead_used = TRUE for these providers`,
+      providers: providerIds,
+      updated: result.rows
+    });
+  } catch (error) {
+    console.error('❌ Update failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Update failed',
+      details: error.message
+    });
+  }
+});
+
+// Set ALL other providers to FALSE (everyone else gets free lead)
+router.get('/set-all-others-false', async (req, res) => {
+  try {
+    const pool = require('../config/database');
+    const excludeIds = ['provider14', 'provider91', 'provider50', 'provider32', 'provider47', 'provider46'];
+    
+    // Set to FALSE for all providers NOT in the exclude list
+    await pool.query(
+      'UPDATE providers SET first_lead_used = FALSE WHERE id != ALL($1)',
+      [excludeIds]
+    );
+    
+    // Get stats
+    const stats = await pool.query(`
+      SELECT 
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE first_lead_used = TRUE) as used_true,
+        COUNT(*) FILTER (WHERE first_lead_used = FALSE) as used_false
+      FROM providers
+    `);
+    
+    res.json({
+      success: true,
+      message: `✅ Set all providers (except specified 6) to first_lead_used = FALSE`,
+      excluded: excludeIds,
+      stats: stats.rows[0]
+    });
+  } catch (error) {
+    console.error('❌ Update failed:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Update failed',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
