@@ -206,6 +206,36 @@ class Provider {
       throw error;
     }
   }
+
+  static async markFirstLeadUsed(providerId) {
+    const query = `
+      UPDATE providers 
+      SET first_lead_used = TRUE, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+      RETURNING *
+    `;
+
+    try {
+      const result = await pool.query(query, [providerId]);
+      console.log(`✅ Marked first lead as used for provider ${providerId}`);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error marking first lead as used:', error);
+      throw error;
+    }
+  }
+
+  static async hasUsedFirstLead(providerId) {
+    const query = 'SELECT first_lead_used FROM providers WHERE id = $1';
+    
+    try {
+      const result = await pool.query(query, [providerId]);
+      return result.rows[0]?.first_lead_used || false;
+    } catch (error) {
+      console.error('Error checking first lead status:', error);
+      return true; // Default to true (already used) on error to be safe
+    }
+  }
 }
 
 module.exports = Provider;

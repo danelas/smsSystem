@@ -153,6 +153,39 @@ When: ${timeWindow}
 Contact the client directly. Good luck! 🍀`;
   }
 
+  formatFirstLeadFreeMessage(privateDetails, publicDetails, leadId) {
+    // Format date without time (same as teaser message)
+    let timeWindow = 'Flexible';
+    if (publicDetails.preferred_time_window) {
+      const parsedDate = moment(publicDetails.preferred_time_window);
+      if (parsedDate.isValid()) {
+        timeWindow = parsedDate.format('MMM D, YYYY');
+      }
+    }
+
+    return `🎁 FIRST CLIENT REQUEST - ON US!
+
+Welcome to Gold Touch! Your first lead is FREE as our gift to you.
+
+👤 Client: ${privateDetails.client_name}
+📞 Phone: ${privateDetails.client_phone}
+📧 Email: ${privateDetails.client_email || 'Not provided'}
+📍 Address: ${privateDetails.exact_address || `${privateDetails.city}, ${publicDetails.zip_code || ''}`}
+💬 Contact Pref: ${publicDetails.contactpref || 'Not specified'}
+
+Service: ${publicDetails.service_type}
+When: ${timeWindow}
+
+Contact the client directly. Good luck! 🍀
+
+Future leads are $20 to unlock. Reply Y when you see opportunities you want!`;
+  }
+
+  async sendFirstLeadFree(providerPhone, privateDetails, publicDetails, leadId) {
+    const message = this.formatFirstLeadFreeMessage(privateDetails, publicDetails, leadId);
+    return await this.sendSMS(providerPhone, message);
+  }
+
   isQuietHours(phoneNumber) {
     // For now, assume all providers are in the same timezone
     // In production, you'd lookup the provider's timezone from the database
@@ -264,7 +297,34 @@ Contact the client directly. Good luck! 🍀`;
             return { action: 'lead_closed' };
           }
 
-          // Create or reuse payment link
+          // Check if this is provider's first lead (FREE!)
+          const hasUsedFirstLead = await Provider.hasUsedFirstLead(providerId);
+          
+          if (!hasUsedFirstLead) {
+            console.log(`🎁 First lead for provider ${providerId} - sending FREE!`);
+            
+            // Get full lead details
+            const Lead = require('../models/Lead');
+            const publicDetails = await Lead.getPublicFields(leadId);
+            const privateDetails = await Lead.getPrivateFields(leadId);
+            
+            // Send special first lead message with full details
+            await this.sendFirstLeadFree(phoneNumber, privateDetails, publicDetails, leadId);
+            
+            // Mark as revealed and paid
+            await Unlock.updateStatus(leadId, providerId, 'REVEALED', {
+              revealed_at: now,
+              paid_at: now,
+              unlocked_at: now
+            });
+            
+            // Mark provider's first lead as used
+            await Provider.markFirstLeadUsed(providerId);
+            
+            return { action: 'first_lead_free', isFree: true };
+          }
+
+          // Normal flow - create payment link
           console.log('Creating payment link for lead:', leadId, 'provider:', providerId);
           console.log('Current unlock status:', unlock.status);
           console.log('Existing payment link URL:', unlock.payment_link_url);
