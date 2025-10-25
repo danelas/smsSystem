@@ -54,8 +54,8 @@ const webhookLimiter = rateLimit({
 app.use('/webhooks/', webhookLimiter);
 
 // Serve static files
-app.use(express.static('public'));
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/public', express.static(path.join(__dirname, '..', 'public')));
 
 // Body parsing middleware
 // Note: Stripe webhook needs raw body, so we exclude it from JSON parsing
@@ -87,12 +87,12 @@ app.use('/form', providerRoutes); // Also handle /form/:slug routes
 
 // Provider URLs page
 app.get('/provider-urls', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'provider-urls.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'provider-urls.html'));
 });
 
 // Form page for providers
 app.get('/form/:slug', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'form.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'form.html'));
 });
 
 // Root endpoint
