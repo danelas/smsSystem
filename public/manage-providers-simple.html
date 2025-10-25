@@ -79,12 +79,14 @@
             <tr>
                 <th>Provider ID</th>
                 <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
                 <th>First Lead Used?</th>
                 <th>Actions (Click Links)</th>
             </tr>
         </thead>
         <tbody id="providersBody">
-            <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
+            <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
         </tbody>
     </table>
 
@@ -119,6 +121,8 @@
                     row.innerHTML = `
                         <td><strong>${provider.id}</strong></td>
                         <td>${provider.name || 'N/A'}</td>
+                        <td>${provider.phone || 'N/A'}</td>
+                        <td>${provider.email || 'N/A'}</td>
                         <td class="${statusClass}">${statusText}</td>
                         <td>
                             <a href="/webhooks/reset-first-lead/${provider.id}" target="_blank">Set to FALSE</a>
@@ -132,7 +136,7 @@
                 
             } catch (error) {
                 document.getElementById('providersBody').innerHTML = 
-                    `<tr><td colspan="4" style="color: red;">Error: ${error.message}</td></tr>`;
+                    `<tr><td colspan="6" style="color: red;">Error: ${error.message}</td></tr>`;
             }
         }
         

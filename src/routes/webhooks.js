@@ -636,7 +636,7 @@ router.get('/check-first-lead-status', async (req, res) => {
     const pool = require('../config/database');
     
     const result = await pool.query(`
-      SELECT id, name, first_lead_used, created_at
+      SELECT id, name, phone, email, first_lead_used, created_at, updated_at
       FROM providers 
       ORDER BY id
     `);
