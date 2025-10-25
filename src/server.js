@@ -182,6 +182,9 @@ app.listen(PORT, () => {
       try {
         const addMissingLeadColumns = require('./migrations/add_missing_lead_columns');
         await addMissingLeadColumns();
+        
+        const addProviderEmailColumn = require('./migrations/add_provider_email_column');
+        await addProviderEmailColumn();
       } catch (migrationError) {
         console.error('Migration error:', migrationError);
       }
