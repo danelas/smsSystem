@@ -264,6 +264,19 @@ Future requests $20. Reply Y to unlock.`;
         console.log('Most recent unlock found:', recentUnlock);
         
         if (!recentUnlock) {
+          console.log('No recent unlock found - checking if this might be a support question');
+          
+          // If no recent unlock and message doesn't look like a lead response, 
+          // try AI support as fallback
+          const looksLikeLeadResponse = /^[yn]|yes|no|interested|maybe|sure|ok/i.test(originalMessage.trim());
+          
+          if (!looksLikeLeadResponse) {
+            console.log('No recent unlock and not a lead response - trying AI support');
+            const fallbackSupportResult = await ProviderSupportService.getProviderSupportResponse(originalMessage, phoneNumber);
+            await this.sendSMS(phoneNumber, fallbackSupportResult);
+            return { action: 'fallback_ai_support', response: fallbackSupportResult };
+          }
+          
           console.log('No recent unlock found - sending help message');
           await this.sendHelpMessage(phoneNumber);
           return { action: 'no_recent_interaction' };
@@ -277,6 +290,19 @@ Future requests $20. Reply Y to unlock.`;
       console.log('Found unlock:', unlock);
       
       if (!unlock) {
+        console.log('No unlock found - checking if this might be a support question');
+        
+        // If no unlock and message doesn't look like a lead response, 
+        // try AI support as fallback
+        const looksLikeLeadResponse = /^[yn]|yes|no|interested|maybe|sure|ok/i.test(originalMessage.trim());
+        
+        if (!looksLikeLeadResponse) {
+          console.log('No unlock and not a lead response - trying AI support');
+          const fallbackResponse = await ProviderSupportService.getProviderSupportResponse(originalMessage, phoneNumber);
+          await this.sendSMS(phoneNumber, fallbackResponse);
+          return { action: 'fallback_ai_support', response: fallbackResponse };
+        }
+        
         console.log('No unlock found - sending help message');
         await this.sendHelpMessage(phoneNumber);
         return { action: 'unlock_not_found' };
@@ -339,9 +365,11 @@ Future requests $20. Reply Y to unlock.`;
         return { action: 'unrecognized_response_with_help' };
       }
       
-      // For casual messages like "hi", "hello", etc. - just log and ignore
-      console.log(`Ignoring casual message from provider ${providerId}: "${message}"`);
-      return { action: 'ignored_casual_message' };
+      // For casual messages like "hi", "hello", etc. - try AI support as final fallback
+      console.log(`Trying AI support for casual message from provider ${providerId}: "${message}"`);
+      const finalResponse = await ProviderSupportService.getProviderSupportResponse(originalMessage, phoneNumber);
+      await this.sendSMS(phoneNumber, finalResponse);
+      return { action: 'final_fallback_ai_support', response: finalResponse };
 
     } catch (error) {
       console.error('Error processing incoming message:', error);

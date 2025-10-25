@@ -54,7 +54,11 @@ Never reveal any client data before an unlock is confirmed for that provider.`;
       'help', 'info', 'explain', 'tell me', 'understand',
       'work', 'cost', 'price', 'fee', 'charge', 'pay',
       'location', 'area', 'commission', 'cut', 'earn',
-      'often', 'many', 'request', 'lead', 'client', 'question'
+      'often', 'many', 'request', 'lead', 'client', 'question',
+      'cancel', 'cancellation', 'unsubscribe', 'stop service', 'quit',
+      'plan', 'subscription', 'account', 'billing', 'support',
+      'hello', 'hi', 'hey', 'trying to', 'need to', 'want to',
+      'issue', 'problem', 'trouble', 'site', 'website', 'see'
     ];
 
     const leadResponseIndicators = [
