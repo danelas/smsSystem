@@ -175,9 +175,7 @@ Address: ${privateDetails.exact_address || `${privateDetails.city}, ${publicDeta
 ${publicDetails.service_type} - ${timeWindow}
 Contact: ${publicDetails.contactpref || 'Any'}
 
-Call them now. Good luck!
-
-Future requests $20. Reply Y to unlock.`;
+Thanks for using Gold Touch!`;
   }
 
   async sendFirstLeadFree(providerPhone, privateDetails, publicDetails, leadId) {
